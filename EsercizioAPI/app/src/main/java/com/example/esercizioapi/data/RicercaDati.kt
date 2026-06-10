@@ -20,7 +20,7 @@ class AlberoRicerca(
     }
 
 
-    fun DFS(Pezzo : String) : List<RicercaDati> {
+    fun dfs(Pezzo : String) : List<RicercaDati> {
         var node = padre.getNode(Pezzo)
         val coda = ArrayDeque<Nodo<RicercaDati>>()
 

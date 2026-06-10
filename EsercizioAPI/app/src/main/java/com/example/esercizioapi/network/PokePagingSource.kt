@@ -45,20 +45,3 @@ class PokePagingSource(
         }
     }
 }
-
-class UserViewModel(
-    val backend: PokeViewModel,
-    val query : String
-) : ViewModel() {
-
-    val userPagingFlow : Flow<PagingData<Pokemon>> = Pager(
-        config = PagingConfig(
-            pageSize = 20,
-            enablePlaceholders = true
-        ),
-        pagingSourceFactory = {
-            PokePagingSource(backend, 20, query)
-        }
-    ).flow
-        .cachedIn(viewModelScope)
-}

@@ -2,9 +2,11 @@ package com.example.esercizioapi
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
@@ -45,7 +48,6 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
 import com.example.esercizioapi.network.Pokemon
-import com.example.esercizioapi.network.UserViewModel
 import com.example.esercizioapi.ui.theme.EsercizioAPITheme
 
 class MainActivity : ComponentActivity() {
@@ -68,8 +70,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Greeting(modifier: Modifier = Modifier) {
     val viewModel : PokeViewModel = viewModel(factory = PokeViewModel.Factory)
-    val userViewModel : UserViewModel by remember { mutableStateOf(UserViewModel(viewModel, "")) }
-    var field by remember { mutableStateOf(TextFieldState()) }
+    val field = viewModel.field
 
     val list by viewModel.stateflow.collectAsState()
 
@@ -80,7 +81,7 @@ fun Greeting(modifier: Modifier = Modifier) {
     ){
         Barra(
             field,
-            viewModel.searchListName(field.text.toString().lowercase()),
+            viewModel.searchName(field.text.toString().lowercase()),
             {
                 viewModel.getInfoPokemons(field.text.toString().lowercase())
             },
@@ -90,7 +91,7 @@ fun Greeting(modifier: Modifier = Modifier) {
         if(list != null && field.text != ""){
             Cards(list!!)
         }else{
-            val userFlow = userViewModel.userPagingFlow
+            val userFlow = viewModel.userPagingFlow
             val lazyPagingItems = userFlow.collectAsLazyPagingItems()
             LazyColumn {
                 items(
@@ -180,10 +181,10 @@ fun Card(poke : Pokemon, modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if(poke.sprites.front_default != null){
+            if(poke.sprites.front_default != null && poke.sprites.front_default != ""){
                 AsyncImage(
                     modifier = Modifier
-                        .padding(start = 20.dp, end = 15.dp)
+                        .padding(start = 20.dp, end = 15.dp, top = 20.dp, bottom = 20.dp)
                         .height(250.dp)
                         .width(250.dp),
                     model = poke.sprites.front_default,
@@ -191,8 +192,13 @@ fun Card(poke : Pokemon, modifier: Modifier = Modifier) {
                 )
             }else
             {
-                Box(
-                    Modifier.width(250.dp).height(250.dp).padding(start = 20.dp,end = 15.dp)
+                Image(
+                    modifier = Modifier
+                        .width(250.dp)
+                        .height(250.dp)
+                        .padding(start = 20.dp,end = 15.dp, top = 20.dp, bottom = 20.dp),
+                    painter = painterResource(R.drawable.missingno),
+                    contentDescription = ""
                 )
             }
 

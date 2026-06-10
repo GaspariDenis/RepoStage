@@ -1,6 +1,7 @@
 package com.example.esercizioapi
 
 import android.util.Log
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -15,19 +16,26 @@ import com.example.esercizioapi.network.Pokemon
 import kotlinx.coroutines.launch
 import java.io.IOException
 import  androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import com.example.esercizioapi.data.AlberoRicerca
 import com.example.esercizioapi.network.Infos
+import com.example.esercizioapi.network.PokePagingSource
 import com.example.esercizioapi.network.Sprite
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 
-class PokeViewModel(private val repository: Repository) : ViewModel() {
+class PokeViewModel(private val repository: Repository, val query: String) : ViewModel() {
     private val TAG = "ViewModel"
 
-    var state : UiState by mutableStateOf(UiState.Loading)
+    val field : TextFieldState = TextFieldState()
+
+    var firstState : UiState by mutableStateOf(UiState.Loading)
         private set
 
     var secondState : SecondUiState by mutableStateOf(SecondUiState.Loading)
@@ -39,8 +47,52 @@ class PokeViewModel(private val repository: Repository) : ViewModel() {
     lateinit var infoPokemon: Pokemon
         private set
 
-    private suspend fun GETinfo(offset: Int, limit : Int) {
-        state = try{
+    var nPokemon : Int = 0
+
+    lateinit var ricerca : AlberoRicerca
+
+    val flowRicercaPokemon = MutableStateFlow<List<Pokemon>?>(null)
+    val stateflow = flowRicercaPokemon.asStateFlow()
+
+    val userPagingFlow : Flow<PagingData<Pokemon>> = Pager(
+        config = PagingConfig(
+            pageSize = 20,
+            enablePlaceholders = true
+        ),
+        pagingSourceFactory = {
+            PokePagingSource(this, 20, query)
+        }
+    ).flow
+        .cachedIn(viewModelScope)
+
+    init {
+        initRicerca()
+    }
+
+    private fun initRicerca() {
+        viewModelScope.launch(Dispatchers.IO) {
+            withContext(Dispatchers.IO){
+                if(nPokemon == 0)
+                    getCount()
+            }
+
+            withContext(Dispatchers.IO){
+                try{
+                    if(info.results.count() != nPokemon)
+                        getContainer(0, nPokemon)
+                }catch (e : Exception) {
+                    getContainer(0, nPokemon)
+                }
+            }
+
+            if(firstState is UiState.Success){
+                ricerca = AlberoRicerca(info.results)
+            }
+        }
+    }
+
+    private suspend fun getContainer(offset: Int, limit : Int) {
+        firstState = try{
             val listRes = repository.getRangeInfo(offset, limit)
             info = listRes
             Log.d(TAG,listRes.toString())
@@ -50,7 +102,7 @@ class PokeViewModel(private val repository: Repository) : ViewModel() {
         }
     }
 
-    private suspend fun GETInfoPokemon(name : String) {
+    private suspend fun getPokemon(name : String) {
         secondState = try{
             Log.d(TAG, "Chiesto nome: $name")
             val res = repository.getPokemon(name)
@@ -62,49 +114,17 @@ class PokeViewModel(private val repository: Repository) : ViewModel() {
         }
     }
 
-    init {
-        InitRicerca()
-    }
-
-    var NPokemon : Int = 0
-
-    lateinit var Ricerca : AlberoRicerca
-
-    private suspend fun GetCount() {
-        GETinfo(0,0)
-        if(state is UiState.Success){
-            NPokemon = info.count
+    private suspend fun getCount() {
+        getContainer(0,0)
+        if(firstState is UiState.Success){
+            nPokemon = info.count
         }
     }
 
-    private fun InitRicerca() {
-        Log.d(TAG, "Inizio Init")
-        viewModelScope.launch(Dispatchers.IO) {
-            withContext(Dispatchers.IO){
-                if(NPokemon == 0)
-                    GetCount()
-            }
-
-            Log.d(TAG, NPokemon.toString())
-            withContext(Dispatchers.IO){
-                try{
-                    if(info.results.count() != NPokemon)
-                        GETinfo(0, NPokemon)
-                }catch (e : Exception) {
-                    GETinfo(0, NPokemon)
-                }
-            }
-
-            if(state is UiState.Success){
-                Ricerca = AlberoRicerca(info.results)
-            }
-        }
-    }
-
-    fun searchListName(name: String) : List<String> {
+    fun searchName(name: String) : List<String> {
         var listName = listOf<String>()
         try{
-            val lista = Ricerca.DFS(name)
+            val lista = ricerca.dfs(name)
             for(item in lista) {
                 listName = listName + (item as Infos).name
             }
@@ -115,20 +135,17 @@ class PokeViewModel(private val repository: Repository) : ViewModel() {
     }
 
     private suspend fun getInfoPokemon(name : String) : Pokemon {
-        GETInfoPokemon(name)
+        getPokemon(name)
 
-        if(secondState is SecondUiState.Success)
+        if (secondState is SecondUiState.Success)
             return infoPokemon
-        return Pokemon("Error", 0,0, Sprite(""))
+        return Pokemon("Error", 0, 0, Sprite(""))
     }
-
-    val flow = MutableStateFlow<List<Pokemon>?>(null)
-    val stateflow = flow.asStateFlow()
 
     fun getInfoPokemons(name : String) {
         viewModelScope.launch(Dispatchers.IO) {
             var out = listOf<Pokemon>()
-            val list = searchListName(name)
+            val list = searchName(name)
 
             for(n in list) {
                 withContext(Dispatchers.IO){
@@ -136,22 +153,25 @@ class PokeViewModel(private val repository: Repository) : ViewModel() {
                 }
             }
 
-            flow.value = out
+            flowRicercaPokemon.value = out
         }
     }
 
     suspend fun getInfoPokemons(page: Int, itemPerPage : Int): List<Pokemon> {
         var out = listOf<Pokemon>()
-        GETinfo(page, itemPerPage)
+        getContainer(page, itemPerPage)
 
-        if(state is UiState.Success){
+        if(firstState is UiState.Success){
             for(n in info.results) {
                 withContext(Dispatchers.IO){
                     out = out + getInfoPokemon(n.name)
                 }
             }
             return out
+        }else if(firstState is UiState.Error){
+            initRicerca()
         }
+
         return listOf()
     }
 
@@ -160,7 +180,7 @@ class PokeViewModel(private val repository: Repository) : ViewModel() {
             initializer {
                 val application =(this[APPLICATION_KEY] as application)
                 val repo = application.containter.repository
-                PokeViewModel(repo)
+                PokeViewModel(repo, "")
             }
         }
     }
