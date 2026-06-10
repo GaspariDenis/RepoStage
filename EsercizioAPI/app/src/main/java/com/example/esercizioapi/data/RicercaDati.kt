@@ -79,14 +79,13 @@ class Nodo<T>(){
     }
 
     fun getNode(key: String) : Nodo<T>? {
+        if(key.count() == 0)
+            return this
+
         val carattere = key[0].code - 'a'.code
 
         if(carattere < 0) {
             return getNode(key.drop(1))
-        }
-
-        if(key.count() <= 1){
-            return child[carattere]
         }
 
         if(child[carattere] == null)

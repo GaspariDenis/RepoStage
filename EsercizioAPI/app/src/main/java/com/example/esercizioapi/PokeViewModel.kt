@@ -19,6 +19,7 @@ import com.example.esercizioapi.data.AlberoRicerca
 import com.example.esercizioapi.network.Infos
 import com.example.esercizioapi.network.Sprite
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
@@ -51,6 +52,7 @@ class PokeViewModel(private val repository: Repository) : ViewModel() {
 
     private suspend fun GETInfoPokemon(name : String) {
         secondState = try{
+            Log.d(TAG, "Chiesto nome: $name")
             val res = repository.getPokemon(name)
             infoPokemon = res
             Log.d(TAG, res.toString())
@@ -136,6 +138,18 @@ class PokeViewModel(private val repository: Repository) : ViewModel() {
 
             flow.value = out
         }
+    }
+
+    suspend fun getInfoPokemons(page: Int, itemPerPage : Int): List<Pokemon> {
+        var out = listOf<Pokemon>()
+        GETinfo(page, itemPerPage)
+
+        for(n in info.results) {
+            withContext(Dispatchers.IO){
+                out = out + getInfoPokemon(n.name)
+            }
+        }
+        return out
     }
 
     companion object{

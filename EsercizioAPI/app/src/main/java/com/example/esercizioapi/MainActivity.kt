@@ -48,9 +48,13 @@ import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
 import com.example.esercizioapi.network.Pokemon
+import com.example.esercizioapi.network.UserViewModel
 import com.example.esercizioapi.ui.theme.EsercizioAPITheme
+import kotlinx.coroutines.flow.flow
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,6 +76,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Greeting(modifier: Modifier = Modifier) {
     val viewModel : PokeViewModel = viewModel(factory = PokeViewModel.Factory)
+    val userViewModel : UserViewModel by remember { mutableStateOf(UserViewModel(viewModel, "")) }
     var field by remember { mutableStateOf(TextFieldState()) }
 
     val list by viewModel.stateflow.collectAsState()
@@ -91,7 +96,21 @@ fun Greeting(modifier: Modifier = Modifier) {
             }
         )
         if(list != null){
-            Card(list!!)
+            Cards(list!!)
+        }else{
+            val userFlow = userViewModel.userPagingFlow
+            val lazyPagingItems = userFlow.collectAsLazyPagingItems()
+            LazyColumn {
+                items(
+                    lazyPagingItems.itemCount,
+                    key = lazyPagingItems.itemKey { it.id }
+                ) {
+                    index ->
+                    val poke = lazyPagingItems[index]
+                    if(poke != null)
+                        Card(poke)
+                }
+            }
         }
     }
 }
@@ -146,39 +165,44 @@ fun Barra(field : TextFieldState,
 }
 
 @Composable
-fun Card( pokemons : List<Pokemon>, modifier: Modifier = Modifier) {
+fun Cards( pokemons : List<Pokemon>, modifier: Modifier = Modifier) {
     LazyColumn(Modifier.fillMaxSize()) {
         items(
             items = pokemons,
             itemContent = {
                 poke->
-                Card(
-                    modifier = modifier
-                        .fillMaxWidth()
-                        .padding(start = 10.dp, end = 10.dp, top = 15.dp)
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        if(poke.sprites.front_default != null){
-                            AsyncImage(
-                                modifier = Modifier
-                                    .padding(start = 20.dp)
-                                    .height(250.dp)
-                                    .width(250.dp),
-                                model = poke.sprites.front_default,
-                                contentDescription = null,
-                            )
-                        }
-
-                        Text(
-                            text = poke.name
-                        )
-                    }
-                }
+                    Card(poke)
             }
         )
+    }
+}
+
+@Composable
+fun Card(poke : Pokemon, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = 10.dp, end = 10.dp, top = 15.dp)
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if(poke.sprites.front_default != null){
+                AsyncImage(
+                    modifier = Modifier
+                        .padding(start = 20.dp)
+                        .height(250.dp)
+                        .width(250.dp),
+                    model = poke.sprites.front_default,
+                    contentDescription = null,
+                )
+            }
+
+            Text(
+                text = poke.name
+            )
+        }
     }
 }
 
