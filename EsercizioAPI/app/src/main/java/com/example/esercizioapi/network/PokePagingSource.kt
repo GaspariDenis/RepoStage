@@ -1,11 +1,7 @@
 package com.example.esercizioapi.network
 
-import android.util.Log
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
@@ -16,7 +12,6 @@ import coil.network.HttpException
 import com.example.esercizioapi.PokeViewModel
 import kotlinx.coroutines.flow.Flow
 import okio.IOException
-import kotlin.time.Duration.Companion.minutes
 
 class PokePagingSource(
     private val backend: PokeViewModel,

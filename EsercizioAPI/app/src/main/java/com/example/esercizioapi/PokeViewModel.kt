@@ -144,12 +144,15 @@ class PokeViewModel(private val repository: Repository) : ViewModel() {
         var out = listOf<Pokemon>()
         GETinfo(page, itemPerPage)
 
-        for(n in info.results) {
-            withContext(Dispatchers.IO){
-                out = out + getInfoPokemon(n.name)
+        if(state is UiState.Success){
+            for(n in info.results) {
+                withContext(Dispatchers.IO){
+                    out = out + getInfoPokemon(n.name)
+                }
             }
+            return out
         }
-        return out
+        return listOf()
     }
 
     companion object{
