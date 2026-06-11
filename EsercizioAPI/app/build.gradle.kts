@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.0"
 }
 
 android {
@@ -65,4 +67,6 @@ dependencies {
 
     implementation("androidx.paging:paging-compose:3.5.0")
     implementation("androidx.paging:paging-runtime:3.5.0")
+
+    implementation("androidx.navigation:navigation-compose:2.8.9")
 }

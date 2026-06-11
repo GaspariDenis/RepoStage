@@ -1,5 +1,8 @@
 package com.example.esercizioapi.data
 
+import android.util.Log
+import kotlinx.coroutines.coroutineScope
+
 interface RicercaDati {
     fun GetID() : String
 }
@@ -21,6 +24,12 @@ class AlberoRicerca(
 
 
     fun dfs(Pezzo : String) : List<RicercaDati> {
+
+        if(Pezzo == ""){
+            Log.d("Struttura Dati", "Ritornata lista intera")
+            return lista
+        }
+
         var node = padre.getNode(Pezzo)
         val coda = ArrayDeque<Nodo<RicercaDati>>()
 

@@ -2,6 +2,7 @@ package com.example.esercizioapi.network
 
 import com.example.esercizioapi.data.RicercaDati
 import kotlinx.serialization.Serializable
+import java.util.Objects
 
 @Serializable
 data class Container (
@@ -24,12 +25,35 @@ data class Infos(
 @Serializable
 data class Pokemon (
     val name : String,
-    val weight : Int,
+    val weight : Int = 0,
     val id : Int,
-    val sprites : Sprite
+    val sprites : Sprite = Sprite("", ""),
+    val abilities : List<Ability> = listOf(),
+    val base_experience : Int = -1,
+    val species : Specie = Specie("", "")
 )
 
 @Serializable
 data class Sprite(
-    val front_default : String?
+    val front_default : String?,
+    val front_shiny: String?
+)
+
+@Serializable
+data class Ability(
+    val ability : AbilityInfo,
+    val is_hidden : Boolean,
+    val slot : Int
+)
+
+@Serializable
+data class AbilityInfo(
+    val name: String,
+    val url : String
+)
+
+@Serializable
+data class Specie (
+    val name : String,
+    val url : String,
 )
