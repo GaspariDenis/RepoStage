@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 
     id("org.jetbrains.kotlin.plugin.serialization") version "2.0.0"
+    id("com.google.devtools.ksp") version "2.2.0-2.0.2"
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -68,5 +70,10 @@ dependencies {
     implementation("androidx.paging:paging-compose:3.5.0")
     implementation("androidx.paging:paging-runtime:3.5.0")
 
-    implementation("androidx.navigation:navigation-compose:2.8.9")
+    implementation("androidx.navigation:navigation-compose:2.9.8")
+
+    implementation("com.google.dagger:hilt-android:2.59.2")
+    ksp("com.google.dagger:hilt-android-compiler:2.59.2")
+
+    implementation("androidx.hilt:hilt-lifecycle-viewmodel-compose:1.3.0")
 }

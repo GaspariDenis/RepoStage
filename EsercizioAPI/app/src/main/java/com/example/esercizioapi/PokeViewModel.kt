@@ -1,26 +1,15 @@
 package com.example.esercizioapi
 
-import android.app.DialogFragment
-import android.app.Notification
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.esercizioapi.data.Repository
 import com.example.esercizioapi.network.Pokemon
 import kotlinx.coroutines.launch
-import  androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
@@ -32,15 +21,24 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import com.example.esercizioapi.network.Backend
 import com.example.esercizioapi.network.UiState
-import okhttp3.internal.wait
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import dagger.hilt.android.lifecycle.HiltViewModel
 
-class PokeViewModel(private val repository: Repository, val query: String) : ViewModel() {
+@HiltViewModel(assistedFactory = PokeViewModel.Factory::class)
+class PokeViewModel @AssistedInject constructor(@Assisted private val repository: Repository)
+    : ViewModel() {
+    @AssistedFactory
+    interface Factory {
+        fun create(repository: Repository): PokeViewModel
+    }
+
     private val TAG = "ViewModel"
 
     val field : TextFieldState = TextFieldState()
@@ -60,7 +58,7 @@ class PokeViewModel(private val repository: Repository, val query: String) : Vie
             enablePlaceholders = true
         ),
         pagingSourceFactory = {
-            PokePagingSource(backend, 7, query)
+            PokePagingSource(backend, 7, "")
         }
     ).flow
         .cachedIn(viewModelScope)
@@ -160,15 +158,5 @@ class PokeViewModel(private val repository: Repository, val query: String) : Vie
             dismissButton = {},
             onDismissRequest = {},
         )
-    }
-
-    companion object{
-        val Factory : ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val application =(this[APPLICATION_KEY] as application)
-                val repo = application.containter.repository
-                PokeViewModel(repo, "")
-            }
-        }
     }
 }

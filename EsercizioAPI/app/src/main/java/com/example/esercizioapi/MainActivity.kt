@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -16,7 +16,9 @@ import androidx.navigation.toRoute
 import com.example.esercizioapi.ui.Home
 import com.example.esercizioapi.ui.PokemonScreen
 import com.example.esercizioapi.ui.theme.EsercizioAPITheme
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.serialization.Serializable
+import com.example.esercizioapi.data.AppContainer
 
 @Serializable
 object Main
@@ -25,6 +27,7 @@ data class PokemonScreen(
     val pokemon : String
 )
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,7 +37,11 @@ class MainActivity : ComponentActivity() {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
 
                     val nav = rememberNavController()
-                    val viewModel : PokeViewModel = viewModel(factory = PokeViewModel.Companion.Factory)
+                    val viewModel = hiltViewModel<PokeViewModel, PokeViewModel.Factory>(creationCallback = {
+                        factory ->
+                        val repo = AppContainer()
+                        factory.create(repo.repository)
+                    })
 
                     NavHost(navController = nav, startDestination = Main) {
                         composable<Main> { Home(
