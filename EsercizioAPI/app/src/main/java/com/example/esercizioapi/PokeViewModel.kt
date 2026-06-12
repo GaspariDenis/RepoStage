@@ -1,6 +1,16 @@
 package com.example.esercizioapi
 
+import android.app.DialogFragment
+import android.app.Notification
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -37,6 +47,8 @@ class PokeViewModel(private val repository: Repository, val query: String) : Vie
 
     private val backend : Backend = Backend(repository)
 
+    private var show : Boolean = true
+
     lateinit var ricerca : AlberoRicerca
 
     val flowRicercaPokemon = MutableStateFlow<List<Pokemon>?>(null)
@@ -70,9 +82,9 @@ class PokeViewModel(private val repository: Repository, val query: String) : Vie
                 backend.getContainer(0, backend.nPokemon)
             }
 
-
-            if(backend.firstState is UiState.Success){
-                ricerca = AlberoRicerca(backend.info.results)
+            when(backend.firstState){
+                is UiState.Success -> ricerca = AlberoRicerca(backend.info.results)
+                else -> {}
             }
         }
     }
@@ -107,6 +119,47 @@ class PokeViewModel(private val repository: Repository, val query: String) : Vie
 
             flowRicercaPokemon.value = out
         }
+    }
+
+    @Composable
+    fun checkAlert() {
+        if(backend.firstState is UiState.Error){
+            alert((backend.firstState as UiState.Error).error.message!!)
+        }else if (backend.secondState is UiState.Error){
+            alert((backend.secondState as UiState.Error).error.message!!)
+        }else {
+            show = true
+        }
+    }
+
+    @Composable
+    private fun alert(message: String) {
+
+        if(!show)
+            return
+
+        AlertDialog(
+            icon = {},
+            title = {
+                Text(
+                    text = "Error"
+                )
+            },
+            text = {
+                Text(message)
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        show = false
+                    }
+                ) {
+                    Text("Ok")
+                }
+            },
+            dismissButton = {},
+            onDismissRequest = {},
+        )
     }
 
     companion object{

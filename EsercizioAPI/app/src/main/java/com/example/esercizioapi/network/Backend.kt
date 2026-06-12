@@ -10,18 +10,10 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import java.io.IOException
 
-sealed interface UiState {
-
-    data class Success(val json : Container) : UiState
-    object Loading : UiState
-    object Error : UiState
-}
-
-
-sealed interface SecondUiState {
-    data class Success(val json : Pokemon) : SecondUiState
-    object Loading : SecondUiState
-    object Error : SecondUiState
+sealed interface UiState<out T>{
+    data class Success<T>(val json : T) : UiState<T>
+    object Loading : UiState<Nothing>
+    data class Error(val error: Throwable) : UiState<Nothing>
 }
 
 class Backend(
@@ -29,10 +21,10 @@ class Backend(
 ){
     private val TAG = "Backend"
 
-    var firstState : UiState by mutableStateOf(UiState.Loading)
+    var firstState : UiState<Container> by mutableStateOf(UiState.Loading)
         private set
 
-    var secondState : SecondUiState by mutableStateOf(SecondUiState.Loading)
+    var secondState : UiState<Pokemon> by mutableStateOf(UiState.Loading)
         private set
 
     lateinit var info : Container
@@ -61,7 +53,7 @@ class Backend(
             UiState.Success(listRes)
         }catch (e : IOException) {
             Log.e(TAG, e.toString())
-            UiState.Error
+            UiState.Error(Throwable(e.message, e.cause))
         }
     }
 
@@ -71,17 +63,17 @@ class Backend(
             val res = repository.getPokemon(name)
             infoPokemon = res
             Log.d(TAG, res.toString())
-            SecondUiState.Success(res)
+            UiState.Success(res)
         }catch (e : IOException) {
             Log.e(TAG, e.toString())
-            SecondUiState.Error
+            UiState.Error(Throwable(e.message, e.cause))
         }
     }
 
     suspend fun getInfoPokemon(name : String) : Pokemon {
         getPokemon(name)
 
-        if (secondState is SecondUiState.Success)
+        if (secondState is UiState.Success)
             return infoPokemon
 
         errorCount -= 1
