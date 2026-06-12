@@ -1,5 +1,6 @@
 package com.example.esercizioapi.network
 
+import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import coil.network.HttpException
@@ -11,9 +12,13 @@ class PokePagingSource(
     val query: String
 ) : PagingSource<Int, Pokemon>()
 {
+    private val TAG = "Paging"
+
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Pokemon> {
         try{
             val nextPageNumber = params.key ?: 1
+
+            Log.w(TAG, nextPageNumber.toString())
 
             val response = backend.getInfoPokemons((nextPageNumber - 1) * elementPage, elementPage)
 

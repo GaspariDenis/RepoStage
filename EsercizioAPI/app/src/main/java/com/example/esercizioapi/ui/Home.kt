@@ -24,6 +24,7 @@ import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -57,6 +58,7 @@ fun Home(modifier: Modifier = Modifier, viewModel: PokeViewModel,
     val field = viewModel.field
 
     val list by viewModel.stateflow.collectAsState()
+    val paging = viewModel.userPagingFlow.collectAsLazyPagingItems()
 
     viewModel.checkAlert()
 
@@ -77,24 +79,39 @@ fun Home(modifier: Modifier = Modifier, viewModel: PokeViewModel,
         if(list != null && field.text != ""){
             Cards(list!!, onNavigation = onNavigation)
         }else{
-            Paging(viewModel.userPagingFlow, onNavigation)
+            Paging(viewModel.userPagingFlow, onNavigation, {
+                paging.refresh()
+            })
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Paging(flow :Flow<PagingData<Pokemon>>, onNavigation : (String) -> Unit){
+fun Paging(flow :Flow<PagingData<Pokemon>>, onNavigation : (String) -> Unit, onRefresh : () -> Unit){
     val userFlow = flow
     val lazyPagingItems = userFlow.collectAsLazyPagingItems()
-    LazyColumn {
-        items(
-            lazyPagingItems.itemCount,
-            key = lazyPagingItems.itemKey { it.id }
-        ) {
-                index ->
-            val poke = lazyPagingItems[index]
-            if(poke != null)
-                Card(poke, onNavigation = onNavigation)
+
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    PullToRefreshBox(
+        isRefreshing =  isRefreshing,
+        onRefresh = {
+            isRefreshing = true
+            onRefresh()
+            isRefreshing = false
+        },
+    ) {
+        LazyColumn {
+            items(
+                lazyPagingItems.itemCount,
+                key = lazyPagingItems.itemKey { it.id }
+            ) {
+                    index ->
+                val poke = lazyPagingItems[index]
+                if(poke != null)
+                    Card(poke, onNavigation = onNavigation)
+            }
         }
     }
 }
