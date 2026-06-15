@@ -12,6 +12,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.example.esercizioapi.ui.AuthenticationScreen
+import com.example.esercizioapi.ui.CreateAccountScreen
 import com.example.esercizioapi.ui.Home
 import com.example.esercizioapi.ui.PokemonScreen
 import com.example.esercizioapi.ui.theme.EsercizioAPITheme
@@ -25,6 +27,15 @@ data class PokemonRoute(
     val pokemon : String
 )
 
+@Serializable
+object Authentication
+
+@Serializable
+object CreateAccount
+
+@Serializable
+object ProfileInfo
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,7 +47,19 @@ class MainActivity : ComponentActivity() {
 
                     val nav = rememberNavController()
 
-                    NavHost(navController = nav, startDestination = Main) {
+                    NavHost(navController = nav, startDestination = Authentication) {
+                        composable<Authentication> {
+                            AuthenticationScreen(
+                                modifier = Modifier.padding(innerPadding),
+                                nav = nav,
+                            )
+                        }
+                        composable<CreateAccount> {
+                            CreateAccountScreen(
+                                modifier = Modifier.padding(innerPadding),
+                                nav = nav
+                            )
+                        }
                         composable<Main> { Home(
                             modifier = Modifier.padding(innerPadding),
                             nav = nav

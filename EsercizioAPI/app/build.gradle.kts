@@ -5,6 +5,8 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization") version "2.0.0"
     id("com.google.devtools.ksp") version "2.2.0-2.0.2"
     id("com.google.dagger.hilt.android")
+
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -76,4 +78,9 @@ dependencies {
     ksp("com.google.dagger:hilt-android-compiler:2.59.2")
 
     implementation("androidx.hilt:hilt-lifecycle-viewmodel-compose:1.3.0")
+
+    //Firebase
+    implementation(platform("com.google.firebase:firebase-bom:34.14.1"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth")
 }

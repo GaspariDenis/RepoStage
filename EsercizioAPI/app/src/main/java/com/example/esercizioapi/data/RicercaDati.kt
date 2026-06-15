@@ -1,7 +1,6 @@
 package com.example.esercizioapi.data
 
 import android.util.Log
-import kotlinx.coroutines.coroutineScope
 
 interface RicercaDati {
     fun GetID() : String

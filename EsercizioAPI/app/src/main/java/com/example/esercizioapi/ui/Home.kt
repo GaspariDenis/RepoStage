@@ -10,14 +10,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
@@ -31,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.isTraversalGroup
@@ -43,11 +48,14 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
 import com.example.esercizioapi.PokemonRoute
+import com.example.esercizioapi.ProfileInfo
 import com.example.esercizioapi.R
 import com.example.esercizioapi.network.Pokemon
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import kotlinx.coroutines.flow.Flow
 
-@SuppressLint("StateFlowValueCalledInComposition")
+@SuppressLint("StateFlowValueCalledInComposition", "UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun Home(modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel(),
          nav : NavHostController
@@ -59,31 +67,54 @@ fun Home(modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel
 
     viewModel.checkAlert()
 
-    Column(
-        modifier
-            .fillMaxSize()
-            .semantics { isTraversalGroup = true }
-    ){
-        Barra(
-            field,
-            viewModel.searchName(field.text.toString().lowercase()),
-            {
-                viewModel.searchInfoPokemons(field.text.toString().lowercase())
-            },
-            {
-            },
-            viewModel
-        )
-        if(list != null && field.text != ""){
-            Cards(list!!, onNavigation = { str ->
-                nav.navigate(PokemonRoute(str))
-            })
-        }else{
-            Paging(viewModel.userPagingFlow, onNavigation = { str ->
-                nav.navigate(PokemonRoute(str))
-            }, {
-                paging.refresh()
-            })
+    Scaffold(
+        topBar = {
+            Row(modifier = modifier
+                .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically){
+                Barra(
+                    field,
+                    viewModel.searchName(field.text.toString().lowercase()),
+                    {
+                        viewModel.searchInfoPokemons(field.text.toString().lowercase())
+                    },
+                    {
+                    },
+                    viewModel,
+                    modifier = Modifier.weight(1f)
+                )
+
+                Image(
+                    modifier = Modifier.padding(end = 10.dp, top = 25.dp)
+                        .size(50.dp)
+                        .clip(CircleShape)
+                        .clickable(
+                            onClick = {
+                                nav.navigate(ProfileInfo)
+                            }
+                        ),
+                    painter = painterResource(R.drawable.icon),
+                    contentDescription = ""
+                )
+            }
+        },
+    ) {
+        Column(
+            modifier
+                .fillMaxSize()
+                .semantics { isTraversalGroup = true }
+        ){
+            if(list != null && field.text != ""){
+                Cards(list!!, onNavigation = { str ->
+                    nav.navigate(PokemonRoute(str))
+                })
+            }else{
+                Paging(viewModel.userPagingFlow, onNavigation = { str ->
+                    nav.navigate(PokemonRoute(str))
+                }, {
+                    paging.refresh()
+                })
+            }
         }
     }
 }
@@ -94,14 +125,10 @@ fun Paging(flow :Flow<PagingData<Pokemon>>, onNavigation : (String) -> Unit, onR
     val userFlow = flow
     val lazyPagingItems = userFlow.collectAsLazyPagingItems()
 
-    var isRefreshing by remember { mutableStateOf(false) }
-
     PullToRefreshBox(
-        isRefreshing =  isRefreshing,
+        isRefreshing = !lazyPagingItems.loadState.isIdle,
         onRefresh = {
-            isRefreshing = true
             onRefresh()
-            isRefreshing = false
         },
         modifier = Modifier.fillMaxSize()
     ) {
@@ -125,7 +152,8 @@ fun Barra(field : TextFieldState,
           result : List<String>,
           onSearched : () -> Unit,
           onModifier: () -> Unit,
-          viewModel: HomeViewModel
+          viewModel: HomeViewModel,
+          modifier: Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -136,8 +164,8 @@ fun Barra(field : TextFieldState,
     }
 
     SearchBar(
-        modifier = Modifier.fillMaxWidth()
-            .padding(start = 10.dp, end = 10.dp, bottom = 10.dp),
+        modifier = modifier
+            .padding(start = 10.dp, end = 10.dp),
         inputField = {
             SearchBarDefaults.InputField(
                 query = field.text.toString(),
@@ -152,7 +180,7 @@ fun Barra(field : TextFieldState,
                 },
                 expanded = expanded,
                 onExpandedChange = { expanded = it },
-                placeholder = {Text("Search")}
+                placeholder = {Text("Ciao ${Firebase.auth.currentUser?.email}")}
             )
         },
         expanded = expanded,
