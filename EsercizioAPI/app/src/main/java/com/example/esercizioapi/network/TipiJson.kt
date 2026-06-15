@@ -2,7 +2,6 @@ package com.example.esercizioapi.network
 
 import com.example.esercizioapi.data.RicercaDati
 import kotlinx.serialization.Serializable
-import java.util.Objects
 
 @Serializable
 data class Container (

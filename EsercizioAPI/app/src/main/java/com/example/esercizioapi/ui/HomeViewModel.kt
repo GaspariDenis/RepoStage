@@ -1,4 +1,4 @@
-package com.example.esercizioapi
+package com.example.esercizioapi.ui
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.AlertDialog
@@ -7,16 +7,18 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.esercizioapi.data.Repository
-import com.example.esercizioapi.network.Pokemon
-import kotlinx.coroutines.launch
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.example.esercizioapi.data.AlberoRicerca
+import com.example.esercizioapi.data.Repository
+import com.example.esercizioapi.network.Backend
 import com.example.esercizioapi.network.Infos
 import com.example.esercizioapi.network.PokePagingSource
+import com.example.esercizioapi.network.Pokemon
+import com.example.esercizioapi.network.UiState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -24,22 +26,14 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import com.example.esercizioapi.network.Backend
-import com.example.esercizioapi.network.UiState
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
-import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-@HiltViewModel(assistedFactory = PokeViewModel.Factory::class)
-class PokeViewModel @AssistedInject constructor(@Assisted private val repository: Repository)
+@HiltViewModel
+class HomeViewModel @Inject constructor(private val repository: Repository)
     : ViewModel() {
-    @AssistedFactory
-    interface Factory {
-        fun create(repository: Repository): PokeViewModel
-    }
 
-    private val TAG = "ViewModel"
+    private val TAG = "HomeViewModel"
 
     val field : TextFieldState = TextFieldState()
 
@@ -63,47 +57,45 @@ class PokeViewModel @AssistedInject constructor(@Assisted private val repository
     ).flow
         .cachedIn(viewModelScope)
 
-    init {
-        initRicerca()
-    }
-
-    private fun initRicerca() {
+    fun initRicerca() {
         viewModelScope.launch(Dispatchers.IO) {
-            if(backend.nPokemon == 0)
+            if (backend.nPokemon == 0)
                 backend.getCount()
 
-            try{
-                if(backend.info.results.count() != backend.nPokemon){
+            try {
+                if (backend.info.results.count() != backend.nPokemon) {
                     backend.getContainer(0, backend.nPokemon)
                 }
-            }catch (e : Exception) {
+            } catch (e: Exception) {
                 backend.getContainer(0, backend.nPokemon)
             }
 
             when(backend.firstState){
                 is UiState.Success -> ricerca = AlberoRicerca(backend.info.results)
-                else -> {}
+                else -> {
+                }
             }
         }
     }
 
-    fun searchName(name: String) : List<String> {
+    fun searchName(query: String) : List<String> {
+
         var listName = listOf<String>()
         try{
-            val lista = ricerca.dfs(name)
+            val lista = ricerca.dfs(query)
             for(item in lista) {
                 listName = listName + (item as Infos).name
             }
         }catch (e : Exception) {
-            listName = listOf("Nessun pokemon trovato")
+            listName = listOf("albero non inizializzato")
         }
         return listName
     }
 
-    fun getInfoPokemons(name : String) {
+    fun searchInfoPokemons(query : String) {
         viewModelScope.launch(Dispatchers.IO) {
             val out: List<Pokemon>
-            val list = searchName(name)
+            val list = searchName(query)
 
             var jobs = listOf<Deferred<Pokemon>>()
 

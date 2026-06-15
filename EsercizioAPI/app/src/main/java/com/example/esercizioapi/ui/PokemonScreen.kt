@@ -1,9 +1,7 @@
 package com.example.esercizioapi.ui
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -14,53 +12,52 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.example.esercizioapi.PokeViewModel
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.paint
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.esercizioapi.R
 import com.example.esercizioapi.network.Pokemon
-import okhttp3.internal.wait
+import com.example.esercizioapi.network.UiState
 
 @Composable
 fun PokemonScreen(
-    name: String?,
+    name: String,
     modifier: Modifier = Modifier,
-    viewModel: PokeViewModel,
-    onNavigation : () -> Unit
+    viewModel : PokemonViewModel = hiltViewModel(),
+    nav : NavHostController
     ) {
-    when(name){
-        null -> Pokemon(name = "Error", id = -1)
-        else -> viewModel.getInfoPokemons(name)
+
+
+
+    val pokemon by viewModel.retriveInfoPokemon.collectAsStateWithLifecycle(initialValue = UiState.Loading)
+
+    LaunchedEffect(true) {
+        viewModel.setPokemonName(name)
     }
 
-    val list by viewModel.stateflow.collectAsState()
-    val poke =
-        if(list == null)
-            Pokemon("Error", id = -1)
-        else
-            list!!.first()
+    val poke = when(pokemon){
+            is UiState.Loading -> Pokemon(name = "Loading", id = -1)
+            is UiState.Error -> Pokemon(name = "Error", id = -1)
+            is Pokemon -> pokemon as Pokemon
+            else -> Pokemon(name = "Error", id = -2)
+        }
+    //}
 
     Card(
         modifier = modifier
@@ -75,7 +72,9 @@ fun PokemonScreen(
                     .width(70.dp)
                     .padding(top = 20.dp, start = 15.dp)
                     .clickable(
-                        onClick = onNavigation
+                        onClick = {
+                            nav.popBackStack()
+                        }
                     ),
                 painter = painterResource(R.drawable.freccia_indietro),
                 contentDescription = "",

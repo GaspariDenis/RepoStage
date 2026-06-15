@@ -14,18 +14,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,22 +36,21 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
-import com.example.esercizioapi.PokeViewModel
+import com.example.esercizioapi.PokemonRoute
 import com.example.esercizioapi.R
 import com.example.esercizioapi.network.Pokemon
 import kotlinx.coroutines.flow.Flow
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
-fun Home(modifier: Modifier = Modifier, viewModel: PokeViewModel,
-         onNavigation : (String) -> Unit
+fun Home(modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel(),
+         nav : NavHostController
          ) {
     val field = viewModel.field
 
@@ -71,15 +68,20 @@ fun Home(modifier: Modifier = Modifier, viewModel: PokeViewModel,
             field,
             viewModel.searchName(field.text.toString().lowercase()),
             {
-                viewModel.getInfoPokemons(field.text.toString().lowercase())
+                viewModel.searchInfoPokemons(field.text.toString().lowercase())
             },
             {
-            }
+            },
+            viewModel
         )
         if(list != null && field.text != ""){
-            Cards(list!!, onNavigation = onNavigation)
+            Cards(list!!, onNavigation = { str ->
+                nav.navigate(PokemonRoute(str))
+            })
         }else{
-            Paging(viewModel.userPagingFlow, onNavigation, {
+            Paging(viewModel.userPagingFlow, onNavigation = { str ->
+                nav.navigate(PokemonRoute(str))
+            }, {
                 paging.refresh()
             })
         }
@@ -101,6 +103,7 @@ fun Paging(flow :Flow<PagingData<Pokemon>>, onNavigation : (String) -> Unit, onR
             onRefresh()
             isRefreshing = false
         },
+        modifier = Modifier.fillMaxSize()
     ) {
         LazyColumn {
             items(
@@ -121,9 +124,16 @@ fun Paging(flow :Flow<PagingData<Pokemon>>, onNavigation : (String) -> Unit, onR
 fun Barra(field : TextFieldState,
           result : List<String>,
           onSearched : () -> Unit,
-          onModifier: () -> Unit
+          onModifier: () -> Unit,
+          viewModel: HomeViewModel
 ) {
     var expanded by remember { mutableStateOf(false) }
+
+    if(expanded){
+        LaunchedEffect(true) {
+            viewModel.initRicerca()
+        }
+    }
 
     SearchBar(
         modifier = Modifier.fillMaxWidth()
