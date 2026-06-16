@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,6 +18,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -37,6 +40,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.modifier.modifierLocalOf
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
@@ -54,6 +59,7 @@ import com.example.esercizioapi.network.Pokemon
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 @SuppressLint("StateFlowValueCalledInComposition", "UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -64,6 +70,8 @@ fun Home(modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel
 
     val list by viewModel.stateflow.collectAsState()
     val paging = viewModel.userPagingFlow.collectAsLazyPagingItems()
+
+    var isFavourite by remember { mutableStateOf(false) }
 
     viewModel.checkAlert()
 
@@ -82,21 +90,39 @@ fun Home(modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel
                     nav
                 )
         },
+        bottomBar = {
+            BottomBar(
+                onClickHome = {
+                    isFavourite = false
+                },
+                onClickFavourite = {
+                    isFavourite = true
+                }
+            )
+        }
     ) {
         Column(
             modifier
                 .fillMaxSize()
                 .semantics { isTraversalGroup = true }
         ){
-            if(list != null && field.text != ""){
-                Cards(list!!, onNavigation = { str ->
-                    nav.navigate(PokemonRoute(str))
-                })
+            if(!isFavourite) {
+                if(list != null && field.text != ""){
+                    Cards(list!!, onNavigation = { str ->
+                        nav.navigate(PokemonRoute(str))
+                    })
+                }else{
+                    Paging(viewModel.userPagingFlow, onNavigation = { str ->
+                        nav.navigate(PokemonRoute(str))
+                    }, {
+                        paging.refresh()
+                    })
+                }
             }else{
-                Paging(viewModel.userPagingFlow, onNavigation = { str ->
+                val listaFavourite = viewModel.getFavourite()
+
+                Cards(listaFavourite, onNavigation = {str ->
                     nav.navigate(PokemonRoute(str))
-                }, {
-                    paging.refresh()
                 })
             }
         }
@@ -267,6 +293,49 @@ fun Card(poke : Pokemon, modifier: Modifier = Modifier, onNavigation: (String) -
                 style = MaterialTheme.typography.titleLarge,
                 text = poke.name.uppercase()
             )
+        }
+    }
+}
+
+@Composable
+fun BottomBar(
+    onClickHome : () -> Unit,
+    onClickFavourite : () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Card(
+            modifier = Modifier
+                .padding(start = 15.dp, end = 15.dp, bottom = 55.dp)
+                .height(50.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    modifier = Modifier
+                        .size(45.dp)
+                        .padding(start = 10.dp)
+                        .clickable(onClick = onClickHome ),
+                    painter = painterResource(R.drawable.occhio),
+                    contentDescription = null
+                )
+                Spacer(
+                    modifier = Modifier.size(60.dp)
+                )
+                Image(
+                    modifier = Modifier
+                        .size(45.dp)
+                        .padding(end = 10.dp)
+                        .clickable(onClick = onClickFavourite ),
+                    painter = painterResource(R.drawable.stella_gialla),
+                    contentDescription = null
+                )
+            }
         }
     }
 }

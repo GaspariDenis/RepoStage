@@ -1,11 +1,12 @@
 package com.example.esercizioapi.ui
 
-import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
@@ -28,7 +29,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import okio.IOException
+import okhttp3.internal.wait
 import javax.inject.Inject
 
 @HiltViewModel
@@ -40,8 +41,6 @@ class HomeViewModel @Inject constructor(private val repository: Repository)
     val field : TextFieldState = TextFieldState()
 
     private val backend : Backend = Backend(repository)
-
-    private var show : Boolean = true
 
     lateinit var ricerca : AlberoRicerca
 
@@ -114,44 +113,43 @@ class HomeViewModel @Inject constructor(private val repository: Repository)
         }
     }
 
+    fun getFavourite() : List<Pokemon> {
+        var list : List<Pokemon> = listOf()
+        val job = viewModelScope.launch {
+            list = backend.repository.getFavouritePokemon()
+        }
+
+
+        return list
+    }
+
+    fun insertFavourite(poke : Pokemon) {
+        viewModelScope.launch {
+            backend.repository.insertFavouritePokemon(poke)
+        }
+    }
+
+    fun removeFavourite(poke : Pokemon) {
+        viewModelScope.launch {
+            backend.repository.removeFavouritePokemon(poke)
+        }
+    }
+
     @Composable
     fun checkAlert() {
+
         if(backend.firstState is UiState.Error){
             alert((backend.firstState as UiState.Error).error.message!!)
         }else if (backend.secondState is UiState.Error){
             alert((backend.secondState as UiState.Error).error.message!!)
         }else {
-            show = true
+
         }
     }
 
     @Composable
     private fun alert(message: String) {
 
-        if(!show)
-            return
-
-        AlertDialog(
-            icon = {},
-            title = {
-                Text(
-                    text = "Error"
-                )
-            },
-            text = {
-                Text(message)
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        show = false
-                    }
-                ) {
-                    Text("Ok")
-                }
-            },
-            dismissButton = {},
-            onDismissRequest = {},
-        )
+        Toast.makeText(LocalContext.current, "Errore: $message", Toast.LENGTH_LONG).show()
     }
 }

@@ -38,6 +38,19 @@ interface ContainerDao {
     fun insertContainer(container: Container)
 }
 
+@Dao
+interface FavouritePokemonDao {
+
+    @Query("select * from pokemon")
+    fun getAll() : List<Pokemon>
+
+    @Insert
+    fun insertAll(vararg  pokemons: Pokemon)
+
+    @Delete
+    fun deleteAll(vararg pokemons : Pokemon)
+}
+
 @Database(entities = [Pokemon::class], version = 1, exportSchema = false)
 @TypeConverters(Converter::class)
 abstract class PokemonDatabase : RoomDatabase() {
@@ -48,4 +61,10 @@ abstract class PokemonDatabase : RoomDatabase() {
 @TypeConverters(Converter::class)
 abstract class ContainerDatabase : RoomDatabase() {
     abstract fun pokemonDao() : ContainerDao
+}
+
+@Database(entities = [Pokemon::class], version = 1, exportSchema = false)
+@TypeConverters(Converter::class)
+abstract class FavouritePokemonDatabase : RoomDatabase() {
+    abstract fun pokemonDao() : FavouritePokemonDao
 }

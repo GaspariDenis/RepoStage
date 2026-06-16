@@ -1,12 +1,17 @@
 package com.example.esercizioapi.ui
 
+import android.widget.TextView
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -17,11 +22,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.esercizioapi.CreateAccount
 import com.example.esercizioapi.Main
+import com.example.esercizioapi.R
 
 @Composable
 fun AuthenticationScreen(modifier: Modifier = Modifier, nav : NavHostController) {
@@ -37,30 +48,50 @@ fun AuthenticationScreen(modifier: Modifier = Modifier, nav : NavHostController)
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center
     ) {
-        Box(
-            contentAlignment = Alignment.Center
-        ) {
-            TextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 60.dp),
-                value = fieldEmail.text.toString(),
-                onValueChange = {
-                    fieldEmail.edit { replace(0,length,it) }
-                },
-                label = {Text(text="Email")}
-            )
+        var text by remember { mutableStateOf("") }
+
+        Text(
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            fontSize = 30.sp,
+            text = text
+        )
+
+        TextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 10.dp),
+            value = fieldEmail.text.toString(),
+            onValueChange = {
+                fieldEmail.edit { replace(0,length,it) }
+            },
+            label = {Text(text="Email")}
+        )
+
+        Row() {
+            var PasswordView by remember { mutableStateOf(false) }
 
             TextField(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 60.dp),
+                    .weight(1f),
                 value = fieldPassword.text.toString(),
                 onValueChange = {
                     fieldPassword.edit { replace(0,length,it) }
                 },
                 label = {Text(text="Password")},
-                visualTransformation = PasswordVisualTransformation()
+                visualTransformation = if(PasswordView) VisualTransformation.None else PasswordVisualTransformation()
+            )
+
+            Icon(
+                modifier = Modifier.size(60.dp)
+                    .clickable(
+                        onClick = {
+                            PasswordView = !PasswordView
+                        }
+                    ),
+                painter = painterResource(R.drawable.occhio),
+                contentDescription = null
             )
         }
 
@@ -72,6 +103,9 @@ fun AuthenticationScreen(modifier: Modifier = Modifier, nav : NavHostController)
                         fieldPassword.text.toString(),
                         {
                             nav.navigate(Main)
+                        },
+                        {
+                            text = "Errore, riprova."
                         })
                 }
             },

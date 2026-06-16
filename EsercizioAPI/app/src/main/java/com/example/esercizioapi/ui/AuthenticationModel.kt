@@ -14,7 +14,7 @@ class AuthenticationModel : Activity() {
 
     val currentUser = auth.currentUser
 
-    fun createNewAccount(email: String, password : String, onCreationSuccessful : () -> Unit) {
+    fun createNewAccount(email: String, password : String, onCreationSuccessful : () -> Unit, onCreationFailed : () -> Unit) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if(task.isSuccessful){
@@ -22,11 +22,12 @@ class AuthenticationModel : Activity() {
                     onCreationSuccessful()
                 } else{
                     Log.w(TAG, "createUserWithEmail:failed", task.exception)
+                    onCreationFailed()
                 }
             }
     }
 
-    fun signInWith(email: String, password: String, onSingInSuccessful : () -> Unit) {
+    fun signInWith(email: String, password: String, onSingInSuccessful : () -> Unit, onSignInFailure : () -> Unit) {
         auth.signInWithEmailAndPassword(email,password)
             .addOnCompleteListener(this) { task ->
                 if(task.isSuccessful){
@@ -34,6 +35,7 @@ class AuthenticationModel : Activity() {
                     onSingInSuccessful()
                 }else{
                     Log.w(TAG, "signInWithEmail:failed", task.exception)
+                    onSignInFailure()
                 }
             }
     }

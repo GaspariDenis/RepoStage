@@ -27,9 +27,16 @@ class Repository @Inject constructor(
         ContainerDatabase::class.java, "container"
     ).build()
 
+    val favouriteDb = Room.databaseBuilder(
+        Application.appContext,
+        FavouritePokemonDatabase::class.java, "favouritePokemon"
+    ).build()
+
     val pokemonDao = db.pokemonDao()
 
     val containerDao = containerdb.pokemonDao()
+
+    val favouritePokemonDao = favouriteDb.pokemonDao()
 
     suspend fun getContainer(offset: Int, limit: Int) : Container{
         try {
@@ -88,6 +95,26 @@ class Repository @Inject constructor(
         }catch (e : Exception){
             Log.e(TAG, e.message!!)
             return api.getRangeInfo(offset.toString(), limit.toString())
+        }
+    }
+
+    suspend fun getFavouritePokemon() : List<Pokemon> {
+        val list : List<Pokemon>
+        withContext(Dispatchers.Default){
+            list = favouritePokemonDao.getAll()
+        }
+        return list
+    }
+
+    suspend fun insertFavouritePokemon(pokemons : Pokemon) {
+        withContext(Dispatchers.Default) {
+            favouritePokemonDao.insertAll(pokemons)
+        }
+    }
+
+    suspend fun removeFavouritePokemon(pokemons : Pokemon) {
+        withContext(Dispatchers.Default) {
+            favouritePokemonDao.deleteAll(pokemons)
         }
     }
 }
