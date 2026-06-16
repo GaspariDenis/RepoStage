@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "804983299762",
+    "project_id": "pokemonapi-27072",
+    "storage_bucket": "pokemonapi-27072.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:804983299762:android:7132ab6ccb424a41f573ab",
+        "android_client_info": {
+          "package_name": "com.example.esercizioapi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBr5ST85VdWyfX43yDYnNrqEBDPTz7Q9XI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
