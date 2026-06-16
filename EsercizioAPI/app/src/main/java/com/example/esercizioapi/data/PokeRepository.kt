@@ -74,6 +74,9 @@ class Repository @Inject constructor(
             withContext(Dispatchers.Default){
                 pokes = pokemonDao.getRangePokemon(offset, limit)
 
+                if(pokes.isEmpty())
+                    throw Exception("Database vuoto con offset $offset e limit $limit...")
+
                 var i = 1
                 pokes.forEach { item ->
                     if(item.id != offset + i)
@@ -83,6 +86,7 @@ class Repository @Inject constructor(
             }
             return ConvertPokemonsToContainer(pokes)
         }catch (e : Exception){
+            Log.e(TAG, e.message!!)
             return api.getRangeInfo(offset.toString(), limit.toString())
         }
     }
