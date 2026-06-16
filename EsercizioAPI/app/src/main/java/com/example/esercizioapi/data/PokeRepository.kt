@@ -1,18 +1,99 @@
 package com.example.esercizioapi.data
 
+import android.util.Log
+import androidx.room.Room
+import com.example.esercizioapi.Application
 import com.example.esercizioapi.network.APIService
 import com.example.esercizioapi.network.Container
+import com.example.esercizioapi.network.Infos
 import com.example.esercizioapi.network.Pokemon
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 private const val TAG = "RaccoltaDati"
 
 
 class Repository @Inject constructor(
-    val api : APIService
+    val api : APIService,
 ) {
+    val db = Room.databaseBuilder(
+        Application.appContext,
+        PokemonDatabase::class.java, "pokemon"
+    ).build()
 
-    suspend fun getRangeInfo(offset: Int, limit: Int) : Container = api.getRangeInfo(offset.toString(), limit.toString())
+    val containerdb = Room.databaseBuilder(
+        Application.appContext,
+        ContainerDatabase::class.java, "container"
+    ).build()
 
-    suspend fun getPokemon(name : String) : Pokemon = api.getInfoPokemon(name)
+    val pokemonDao = db.pokemonDao()
+
+    val containerDao = containerdb.pokemonDao()
+
+    suspend fun getContainer(offset: Int, limit: Int) : Container{
+        try {
+            val cont : Container
+            withContext(Dispatchers.Default){
+                cont = containerDao.getContainer()
+            }
+            return cont
+        }catch(e : Exception){
+            val cont = api.getRangeInfo(offset.toString(), limit.toString())
+            withContext(Dispatchers.Default){
+                if(cont.next == null)
+                    containerDao.insertContainer(cont)
+            }
+            return cont
+        }
+    }
+
+    suspend fun getPokemon(name : String) : Pokemon {
+        try{
+            Log.d(TAG, "Cerco $name nel database locale.")
+            val poke : Pokemon
+            withContext(Dispatchers.Default){
+                poke = pokemonDao.getPokemon(name)
+            }
+            return poke
+        }catch (e : Exception) {
+            Log.e(TAG, e.message!!)
+            Log.w(TAG, "Non è stato trovato nel database, inizio chiamata...")
+            val poke = api.getInfoPokemon(name)
+            Log.d(TAG, "Inserito nel database $poke")
+            withContext(Dispatchers.Default){
+                pokemonDao.insertAll(poke)
+            }
+            return poke
+        }
+    }
+
+    suspend fun getRangePokemon(offset: Int, limit: Int) : Container {
+        try{
+            val pokes : List<Pokemon>
+            withContext(Dispatchers.Default){
+                pokes = pokemonDao.getRangePokemon(offset, limit)
+
+                var i = 1
+                pokes.forEach { item ->
+                    if(item.id != offset + i)
+                        throw Exception("ID sbagliato")
+                    i += 1
+                }
+            }
+            return ConvertPokemonsToContainer(pokes)
+        }catch (e : Exception){
+            return api.getRangeInfo(offset.toString(), limit.toString())
+        }
+    }
+}
+
+private fun ConvertPokemonsToContainer(list : List<Pokemon>) : Container {
+    var infoList : List<Infos> = listOf()
+
+    list.forEach { item->
+        infoList = infoList + Infos(item.name, "https://pokeapi.co/api/v2/pokemon/${item.id}/")
+    }
+
+    return Container(0, null, null, infoList)
 }

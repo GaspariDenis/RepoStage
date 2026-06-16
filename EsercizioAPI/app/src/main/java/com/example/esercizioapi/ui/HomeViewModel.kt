@@ -1,5 +1,6 @@
 package com.example.esercizioapi.ui
 
+import android.util.Log
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import okio.IOException
 import javax.inject.Inject
 
 @HiltViewModel
@@ -66,7 +68,8 @@ class HomeViewModel @Inject constructor(private val repository: Repository)
                 if (backend.info.results.count() != backend.nPokemon) {
                     backend.getContainer(0, backend.nPokemon)
                 }
-            } catch (e: Exception) {
+            }
+            catch (e: Exception) {
                 backend.getContainer(0, backend.nPokemon)
             }
 

@@ -47,7 +47,12 @@ class Backend(
 
     suspend fun getContainer(offset: Int, limit : Int) {
         firstState = try{
-            val listRes = repository.getRangeInfo(offset, limit)
+            val listRes : Container
+            if(offset == 0 && limit == 0){
+                listRes = repository.getContainer(offset, limit)
+            }else{
+                listRes = repository.getRangePokemon(offset, limit)
+            }
             info = listRes
             Log.d(TAG,listRes.toString())
             UiState.Success(listRes)

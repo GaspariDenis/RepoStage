@@ -1,6 +1,8 @@
 package com.example.esercizioapi
 
 import android.app.Application
+import android.content.Context
+import com.example.esercizioapi.network.Container
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
@@ -8,5 +10,11 @@ class Application : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        appContext = applicationContext
+    }
+
+    companion object{
+        lateinit var appContext : Context
     }
 }
