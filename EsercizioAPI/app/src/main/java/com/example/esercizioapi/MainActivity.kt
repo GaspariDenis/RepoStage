@@ -8,14 +8,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusModifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.esercizioapi.ui.AuthenticationScreen
+import com.example.esercizioapi.ui.ChangePasswordScreen
 import com.example.esercizioapi.ui.CreateAccountScreen
 import com.example.esercizioapi.ui.Home
 import com.example.esercizioapi.ui.PokemonScreen
+import com.example.esercizioapi.ui.ProfileInfoScreen
 import com.example.esercizioapi.ui.theme.EsercizioAPITheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.serialization.Serializable
@@ -35,6 +38,9 @@ object CreateAccount
 
 @Serializable
 object ProfileInfo
+
+@Serializable
+object ChangePassword
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -56,6 +62,18 @@ class MainActivity : ComponentActivity() {
                         }
                         composable<CreateAccount> {
                             CreateAccountScreen(
+                                modifier = Modifier.padding(innerPadding),
+                                nav = nav
+                            )
+                        }
+                        composable<ProfileInfo> {
+                            ProfileInfoScreen(
+                                modifier = Modifier.padding(innerPadding),
+                                nav = nav
+                            )
+                        }
+                        composable<ChangePassword> {
+                            ChangePasswordScreen(
                                 modifier = Modifier.padding(innerPadding),
                                 nav = nav
                             )

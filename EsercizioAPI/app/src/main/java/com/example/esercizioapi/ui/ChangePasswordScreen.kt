@@ -20,18 +20,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.example.esercizioapi.CreateAccount
 import com.example.esercizioapi.Main
 
 @Composable
-fun AuthenticationScreen(modifier: Modifier = Modifier, nav : NavHostController) {
-    var fieldEmail by remember { mutableStateOf(TextFieldState()) }
+fun ChangePasswordScreen(modifier: Modifier = Modifier, nav: NavHostController) {
+    val authenticator by remember { mutableStateOf(AuthenticationModel()) }
     var fieldPassword by remember { mutableStateOf(TextFieldState()) }
-    val Authenticator by remember { mutableStateOf(AuthenticationModel()) }
-
-    if(Authenticator.currentUser != null){
-        nav.navigate(Main)
-    }
 
     Column(
         modifier = modifier.fillMaxSize(),
@@ -43,50 +37,29 @@ fun AuthenticationScreen(modifier: Modifier = Modifier, nav : NavHostController)
             TextField(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 60.dp),
-                value = fieldEmail.text.toString(),
-                onValueChange = {
-                    fieldEmail.edit { replace(0,length,it) }
-                },
-                label = {Text(text="Email")}
-            )
-
-            TextField(
-                modifier = Modifier
-                    .fillMaxWidth()
                     .padding(top = 60.dp),
                 value = fieldPassword.text.toString(),
                 onValueChange = {
                     fieldPassword.edit { replace(0,length,it) }
                 },
-                label = {Text(text="Password")},
-                visualTransformation = PasswordVisualTransformation()
+                visualTransformation = PasswordVisualTransformation(),
+                label = {Text(text="Password")}
             )
         }
 
         TextButton(
             onClick = {
-                if(fieldEmail.text.toString() != "" && fieldPassword.text.toString() != ""){
-                    Authenticator.signInWith(
-                        fieldEmail.text.toString(),
-                        fieldPassword.text.toString(),
-                        {
-                            nav.navigate(Main)
-                        })
+                if(fieldPassword.text.toString().length >= 6){
+                    authenticator.modifyPassword(fieldPassword.text.toString())
+
+                    if(authenticator.currentUser != null){
+                        nav.popBackStack()
+                    }
                 }
             },
             modifier = Modifier.padding(top = 20.dp).fillMaxWidth(),
         ) {
-            Text(text = "SingIn")
-        }
-
-        TextButton(
-            onClick = {
-                nav.navigate(CreateAccount)
-            },
-            modifier = Modifier.padding(top = 20.dp).fillMaxWidth(),
-        ) {
-            Text(text = "Crea nuovo account")
+            Text(text = "Cambia Password")
         }
     }
 }

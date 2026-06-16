@@ -69,9 +69,6 @@ fun Home(modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel
 
     Scaffold(
         topBar = {
-            Row(modifier = modifier
-                .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically){
                 Barra(
                     field,
                     viewModel.searchName(field.text.toString().lowercase()),
@@ -81,22 +78,9 @@ fun Home(modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel
                     {
                     },
                     viewModel,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier,
+                    nav
                 )
-
-                Image(
-                    modifier = Modifier.padding(end = 10.dp, top = 25.dp)
-                        .size(50.dp)
-                        .clip(CircleShape)
-                        .clickable(
-                            onClick = {
-                                nav.navigate(ProfileInfo)
-                            }
-                        ),
-                    painter = painterResource(R.drawable.icon),
-                    contentDescription = ""
-                )
-            }
         },
     ) {
         Column(
@@ -153,7 +137,8 @@ fun Barra(field : TextFieldState,
           onSearched : () -> Unit,
           onModifier: () -> Unit,
           viewModel: HomeViewModel,
-          modifier: Modifier
+          modifier: Modifier,
+          nav : NavHostController
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -163,45 +148,65 @@ fun Barra(field : TextFieldState,
         }
     }
 
-    SearchBar(
-        modifier = modifier
-            .padding(start = 10.dp, end = 10.dp),
-        inputField = {
-            SearchBarDefaults.InputField(
-                query = field.text.toString(),
-                onQueryChange = {str ->
-                    onModifier()
-                    field.edit { replace(0,length, str) }
-                },
-                onSearch = {
-                    onSearched()
-                    //field.edit { replace(0,length, "") }
-                    expanded = false
-                },
-                expanded = expanded,
-                onExpandedChange = { expanded = it },
-                placeholder = {Text("Ciao ${Firebase.auth.currentUser?.email}")}
-            )
-        },
-        expanded = expanded,
-        onExpandedChange = { expanded = it }
-    ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize()
+    Row(modifier = modifier
+        .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically){
+        SearchBar(
+            modifier = modifier
+                .padding(start = 10.dp, end = 10.dp)
+                .weight(1f),
+            inputField = {
+                SearchBarDefaults.InputField(
+                    query = field.text.toString(),
+                    onQueryChange = {str ->
+                        onModifier()
+                        field.edit { replace(0,length, str) }
+                    },
+                    onSearch = {
+                        onSearched()
+                        //field.edit { replace(0,length, "") }
+                        expanded = false
+                    },
+                    expanded = expanded,
+                    onExpandedChange = { expanded = it },
+                    placeholder = {Text("Ciao ${Firebase.auth.currentUser?.email}")}
+                )
+            },
+            expanded = expanded,
+            onExpandedChange = { expanded = it }
         ) {
-            items(
-                items = result,
-                itemContent = {result->
-                    ListItem(
-                        headlineContent = {Text(result)},
-                        modifier = Modifier
-                            .clickable {
-                                field.edit { replace(0, length, result) }
-                                expanded = false
-                            }
-                            .fillMaxWidth()
-                    )
-                }
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(
+                    items = result,
+                    itemContent = {result->
+                        ListItem(
+                            headlineContent = {Text(result)},
+                            modifier = Modifier
+                                .clickable {
+                                    field.edit { replace(0, length, result) }
+                                    expanded = false
+                                }
+                                .fillMaxWidth()
+                        )
+                    }
+                )
+            }
+        }
+
+        if(!expanded){
+            Image(
+                modifier = Modifier.padding(end = 10.dp, top = 25.dp)
+                    .size(50.dp)
+                    .clip(CircleShape)
+                    .clickable(
+                        onClick = {
+                            nav.navigate(ProfileInfo)
+                        }
+                    ),
+                painter = painterResource(R.drawable.icon),
+                contentDescription = ""
             )
         }
     }
