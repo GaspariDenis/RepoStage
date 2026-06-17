@@ -46,7 +46,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.strictmode.FragmentStrictMode
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -56,6 +58,7 @@ import com.example.esercizioapi.PokemonRoute
 import com.example.esercizioapi.ProfileInfo
 import com.example.esercizioapi.R
 import com.example.esercizioapi.network.Pokemon
+import com.example.esercizioapi.network.UiState
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.flow.Flow
@@ -108,20 +111,24 @@ fun Home(modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel
         ){
             if(!isFavourite) {
                 if(list != null && field.text != ""){
-                    Cards(list!!, onNavigation = { str ->
+                    Cards(list!!, viewModel = viewModel , onNavigation = { str ->
                         nav.navigate(PokemonRoute(str))
                     })
                 }else{
-                    Paging(viewModel.userPagingFlow, onNavigation = { str ->
+                    Paging(viewModel.userPagingFlow,viewModel = viewModel, onNavigation = { str ->
                         nav.navigate(PokemonRoute(str))
                     }, {
                         paging.refresh()
                     })
                 }
             }else{
-                val listaFavourite = viewModel.getFavourite()
+                val listaFavourite by viewModel.retriveFavouritePokemon.collectAsState(initial = UiState.Loading)
+                var list : List<Pokemon> = listOf()
 
-                Cards(listaFavourite, onNavigation = {str ->
+                when(listaFavourite) {
+                    is List<*> -> list = listaFavourite as List<Pokemon>
+                }
+                Cards(list, viewModel = viewModel, onNavigation = {str ->
                     nav.navigate(PokemonRoute(str))
                 })
             }
@@ -131,7 +138,7 @@ fun Home(modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Paging(flow :Flow<PagingData<Pokemon>>, onNavigation : (String) -> Unit, onRefresh : () -> Unit){
+fun Paging(flow :Flow<PagingData<Pokemon>>, viewModel: HomeViewModel , onNavigation : (String) -> Unit, onRefresh : () -> Unit){
     val userFlow = flow
     val lazyPagingItems = userFlow.collectAsLazyPagingItems()
 
@@ -150,7 +157,7 @@ fun Paging(flow :Flow<PagingData<Pokemon>>, onNavigation : (String) -> Unit, onR
                     index ->
                 val poke = lazyPagingItems[index]
                 if(poke != null)
-                    Card(poke, onNavigation = onNavigation)
+                    Card(poke, onNavigation = onNavigation, viewModel = viewModel)
             }
         }
     }
@@ -164,7 +171,7 @@ fun Barra(field : TextFieldState,
           onModifier: () -> Unit,
           viewModel: HomeViewModel,
           modifier: Modifier,
-          nav : NavHostController
+          nav : NavHostController,
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -239,20 +246,20 @@ fun Barra(field : TextFieldState,
 }
 
 @Composable
-fun Cards(pokemons : List<Pokemon>, onNavigation: (String) -> Unit, modifier: Modifier = Modifier) {
+fun Cards(pokemons : List<Pokemon>, onNavigation: (String) -> Unit, modifier: Modifier = Modifier, viewModel: HomeViewModel) {
     LazyColumn(Modifier.fillMaxSize()) {
         items(
             items = pokemons,
             itemContent = {
                     poke->
-                Card(poke, onNavigation = onNavigation)
+                Card(poke, onNavigation = onNavigation, viewModel = viewModel)
             }
         )
     }
 }
 
 @Composable
-fun Card(poke : Pokemon, modifier: Modifier = Modifier, onNavigation: (String) -> Unit) {
+fun Card(poke : Pokemon, modifier: Modifier = Modifier, viewModel: HomeViewModel, onNavigation: (String) -> Unit) {
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -289,12 +296,53 @@ fun Card(poke : Pokemon, modifier: Modifier = Modifier, onNavigation: (String) -
                 )
             }
 
-            Text(
-                style = MaterialTheme.typography.titleLarge,
-                text = poke.name.uppercase()
-            )
+            Column() {
+                viewModel.setPokemonName(poke.name)
+
+                val flow by viewModel.isFavourite.collectAsState(initial = UiState.Loading)
+
+                when(flow) {
+                    is Boolean -> {
+                        Favourite(
+                            isFavourite = flow as Boolean,
+                            onFavourite = {
+                                viewModel.removeFavourite(poke)
+                            },
+                            onNonFavourite = {
+                                viewModel.insertFavourite(poke)
+                            }
+                        )
+                    }
+                }
+
+                Text(
+                    style = MaterialTheme.typography.titleLarge,
+                    text = poke.name.uppercase()
+                )
+            }
         }
     }
+}
+
+@Composable
+fun Favourite(modifier: Modifier = Modifier,
+              isFavourite : Boolean,
+              onFavourite : () -> Unit,
+              onNonFavourite : () -> Unit) {
+    Image(
+        modifier = modifier
+            .size(60.dp)
+            .clickable(onClick = {
+                if(isFavourite)
+                    onFavourite()
+                else
+                    onNonFavourite()
+            }),
+        painter = if(isFavourite)
+            painterResource(R.drawable.stella_gialla)
+        else painterResource(R.drawable.stella_nera),
+        contentDescription = null
+    )
 }
 
 @Composable

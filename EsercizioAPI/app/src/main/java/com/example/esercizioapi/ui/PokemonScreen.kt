@@ -39,7 +39,7 @@ import com.example.esercizioapi.network.UiState
 fun PokemonScreen(
     name: String,
     modifier: Modifier = Modifier,
-    viewModel : PokemonViewModel = hiltViewModel(),
+    viewModel : HomeViewModel = hiltViewModel(),
     nav : NavHostController
     ) {
 

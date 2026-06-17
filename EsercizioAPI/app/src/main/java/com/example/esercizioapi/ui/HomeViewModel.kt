@@ -2,9 +2,6 @@ package com.example.esercizioapi.ui
 
 import android.widget.Toast
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
@@ -28,8 +25,10 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import okhttp3.internal.wait
 import javax.inject.Inject
 
 @HiltViewModel
@@ -113,15 +112,45 @@ class HomeViewModel @Inject constructor(private val repository: Repository)
         }
     }
 
-    fun getFavourite() : List<Pokemon> {
-        var list : List<Pokemon> = listOf()
-        val job = viewModelScope.launch {
-            list = backend.repository.getFavouritePokemon()
+    private var _selectPokemonName = MutableStateFlow("")
+
+    val retriveInfoPokemon = _selectPokemonName.flatMapLatest {
+        flow{
+            emit(UiState.Loading)
+            try{
+                emit(backend.getInfoPokemon(_selectPokemonName.value))
+            }catch (e : Exception) {
+                emit(e)
+            }
         }
-
-
-        return list
     }
+
+    val isFavourite = _selectPokemonName.flatMapLatest {
+        flow{
+            emit(UiState.Loading)
+            try{
+                emit(backend.repository.getFavouritePokemon(_selectPokemonName.value).name == _selectPokemonName.value)
+            }catch (e : Exception){
+                emit(false)
+            }
+        }
+    }
+
+    fun setPokemonName(name : String) {
+        _selectPokemonName.update {
+            name
+        }
+    }
+
+    val retriveFavouritePokemon = flow{
+        emit(UiState.Loading)
+        try{
+            emit(backend.repository.getFavouritePokemons())
+        }catch (e : Exception) {
+            emit(e)
+        }
+    }
+
 
     fun insertFavourite(poke : Pokemon) {
         viewModelScope.launch {
@@ -142,8 +171,6 @@ class HomeViewModel @Inject constructor(private val repository: Repository)
             alert((backend.firstState as UiState.Error).error.message!!)
         }else if (backend.secondState is UiState.Error){
             alert((backend.secondState as UiState.Error).error.message!!)
-        }else {
-
         }
     }
 

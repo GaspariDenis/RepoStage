@@ -44,6 +44,9 @@ interface FavouritePokemonDao {
     @Query("select * from pokemon")
     fun getAll() : List<Pokemon>
 
+    @Query("select * from pokemon where name = (:name)")
+    fun getPokemon(name : String) : Pokemon
+
     @Insert
     fun insertAll(vararg  pokemons: Pokemon)
 

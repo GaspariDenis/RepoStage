@@ -98,12 +98,20 @@ class Repository @Inject constructor(
         }
     }
 
-    suspend fun getFavouritePokemon() : List<Pokemon> {
+    suspend fun getFavouritePokemons() : List<Pokemon> {
         val list : List<Pokemon>
         withContext(Dispatchers.Default){
             list = favouritePokemonDao.getAll()
         }
         return list
+    }
+
+    suspend fun getFavouritePokemon(name: String) : Pokemon {
+        val poke : Pokemon
+        withContext(Dispatchers.Default) {
+            poke = favouritePokemonDao.getPokemon(name)
+        }
+        return poke
     }
 
     suspend fun insertFavouritePokemon(pokemons : Pokemon) {
