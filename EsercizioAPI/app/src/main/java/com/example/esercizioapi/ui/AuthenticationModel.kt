@@ -2,11 +2,8 @@ package com.example.esercizioapi.ui
 
 import android.app.Activity
 import android.util.Log
-import androidx.lifecycle.ViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.supervisorScope
 
 class AuthenticationModel : Activity() {
     private val TAG = "Authentication"

@@ -7,6 +7,7 @@ import com.example.esercizioapi.network.APIService
 import com.example.esercizioapi.network.Container
 import com.example.esercizioapi.network.Infos
 import com.example.esercizioapi.network.Pokemon
+import com.example.esercizioapi.network.Favourite
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -22,34 +23,21 @@ class Repository @Inject constructor(
         PokemonDatabase::class.java, "pokemon"
     ).build()
 
-    val containerdb = Room.databaseBuilder(
-        Application.appContext,
-        ContainerDatabase::class.java, "container"
-    ).build()
-
-    val favouriteDb = Room.databaseBuilder(
-        Application.appContext,
-        FavouritePokemonDatabase::class.java, "favouritePokemon"
-    ).build()
-
     val pokemonDao = db.pokemonDao()
-
-    val containerDao = containerdb.pokemonDao()
-
-    val favouritePokemonDao = favouriteDb.pokemonDao()
 
     suspend fun getContainer(offset: Int, limit: Int) : Container{
         try {
             val cont : Container
             withContext(Dispatchers.Default){
-                cont = containerDao.getContainer()
+                cont = pokemonDao.getContainer()
             }
             return cont
         }catch(e : Exception){
+            Log.e(TAG, e.message!!)
             val cont = api.getRangeInfo(offset.toString(), limit.toString())
             withContext(Dispatchers.Default){
                 if(cont.next == null)
-                    containerDao.insertContainer(cont)
+                    pokemonDao.insertContainer(cont)
             }
             return cont
         }
@@ -101,7 +89,7 @@ class Repository @Inject constructor(
     suspend fun getFavouritePokemons() : List<Pokemon> {
         val list : List<Pokemon>
         withContext(Dispatchers.Default){
-            list = favouritePokemonDao.getAll()
+            list = pokemonDao.getAll()
         }
         return list
     }
@@ -109,20 +97,20 @@ class Repository @Inject constructor(
     suspend fun getFavouritePokemon(name: String) : Pokemon {
         val poke : Pokemon
         withContext(Dispatchers.Default) {
-            poke = favouritePokemonDao.getPokemon(name)
+            poke = pokemonDao.getFavourite(name)
         }
         return poke
     }
 
     suspend fun insertFavouritePokemon(pokemons : Pokemon) {
         withContext(Dispatchers.Default) {
-            favouritePokemonDao.insertAll(pokemons)
+            pokemonDao.insertFavourite(Favourite(pokemons.name))
         }
     }
 
     suspend fun removeFavouritePokemon(pokemons : Pokemon) {
         withContext(Dispatchers.Default) {
-            favouritePokemonDao.deleteAll(pokemons)
+            pokemonDao.deleteFavourite(Favourite(pokemons.name))
         }
     }
 }

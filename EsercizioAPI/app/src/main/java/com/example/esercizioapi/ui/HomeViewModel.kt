@@ -118,9 +118,9 @@ class HomeViewModel @Inject constructor(private val repository: Repository)
         flow{
             emit(UiState.Loading)
             try{
-                emit(backend.getInfoPokemon(_selectPokemonName.value))
+                emit(UiState.Success(backend.getInfoPokemon(_selectPokemonName.value)))
             }catch (e : Exception) {
-                emit(e)
+                emit(UiState.Error(e))
             }
         }
     }
@@ -129,9 +129,9 @@ class HomeViewModel @Inject constructor(private val repository: Repository)
         flow{
             emit(UiState.Loading)
             try{
-                emit(backend.repository.getFavouritePokemon(_selectPokemonName.value).name == _selectPokemonName.value)
+                emit(UiState.Success(backend.repository.getFavouritePokemon(_selectPokemonName.value).name == _selectPokemonName.value))
             }catch (e : Exception){
-                emit(false)
+                emit(UiState.Error(e))
             }
         }
     }
@@ -145,9 +145,9 @@ class HomeViewModel @Inject constructor(private val repository: Repository)
     val retriveFavouritePokemon = flow{
         emit(UiState.Loading)
         try{
-            emit(backend.repository.getFavouritePokemons())
+            emit(UiState.Success(backend.repository.getFavouritePokemons()))
         }catch (e : Exception) {
-            emit(e)
+            emit(UiState.Error(e))
         }
     }
 

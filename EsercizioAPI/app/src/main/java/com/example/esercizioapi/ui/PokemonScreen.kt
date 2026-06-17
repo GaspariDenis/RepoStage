@@ -53,9 +53,8 @@ fun PokemonScreen(
 
     val poke = when(pokemon){
             is UiState.Loading -> Pokemon(name = "Loading", id = -1)
-            is UiState.Error -> Pokemon(name = "Error", id = -1)
-            is Pokemon -> pokemon as Pokemon
-            else -> Pokemon(name = "Error", id = -2)
+            is UiState.Error -> Pokemon(name = "Error", id = -2)
+            is UiState.Success -> (pokemon as UiState.Success<*>).json as Pokemon
         }
     //}
 

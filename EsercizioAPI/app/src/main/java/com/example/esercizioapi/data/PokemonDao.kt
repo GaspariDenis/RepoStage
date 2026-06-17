@@ -9,6 +9,7 @@ import androidx.room.Query
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.example.esercizioapi.network.Container
+import com.example.esercizioapi.network.Favourite
 import com.example.esercizioapi.network.Pokemon
 
 @Dao
@@ -24,10 +25,7 @@ interface PokemonDao {
 
     @Insert
     fun insertAll(vararg  pokemons: Pokemon)
-}
 
-@Dao
-interface ContainerDao {
     @Query("select count(*) from container")
     fun getLength() : Int
 
@@ -36,38 +34,23 @@ interface ContainerDao {
 
     @Insert
     fun insertContainer(container: Container)
-}
 
-@Dao
-interface FavouritePokemonDao {
-
-    @Query("select * from pokemon")
+    @Query("select * from pokemon inner join favourite on(name=PokeName)")
     fun getAll() : List<Pokemon>
 
-    @Query("select * from pokemon where name = (:name)")
-    fun getPokemon(name : String) : Pokemon
+    @Query("select * from pokemon inner join favourite on(name=PokeName) where name=(:name)")
+    fun getFavourite(name : String) : Pokemon
 
     @Insert
-    fun insertAll(vararg  pokemons: Pokemon)
+    fun insertFavourite(name: Favourite)
 
     @Delete
-    fun deleteAll(vararg pokemons : Pokemon)
+    fun deleteFavourite(name: Favourite)
 }
 
-@Database(entities = [Pokemon::class], version = 1, exportSchema = false)
+
+@Database(entities = [Pokemon::class, Container::class, Favourite::class], version = 1, exportSchema = false)
 @TypeConverters(Converter::class)
 abstract class PokemonDatabase : RoomDatabase() {
     abstract fun pokemonDao() : PokemonDao
-}
-
-@Database(entities = [Container::class], version = 1, exportSchema = false)
-@TypeConverters(Converter::class)
-abstract class ContainerDatabase : RoomDatabase() {
-    abstract fun pokemonDao() : ContainerDao
-}
-
-@Database(entities = [Pokemon::class], version = 1, exportSchema = false)
-@TypeConverters(Converter::class)
-abstract class FavouritePokemonDatabase : RoomDatabase() {
-    abstract fun pokemonDao() : FavouritePokemonDao
 }

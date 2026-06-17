@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.example.esercizioapi.Main
 
 @Composable
 fun ChangePasswordScreen(modifier: Modifier = Modifier, nav: NavHostController) {

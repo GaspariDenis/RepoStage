@@ -21,7 +21,6 @@ class AlberoRicerca(
         return padre.get(key)
     }
 
-
     fun dfs(Pezzo : String) : List<RicercaDati> {
 
         if(Pezzo == ""){

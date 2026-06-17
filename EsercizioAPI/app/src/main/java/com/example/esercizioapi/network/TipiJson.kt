@@ -1,12 +1,9 @@
 package com.example.esercizioapi.network
 
-import androidx.compose.ui.res.integerResource
 import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
-import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
-import androidx.room.TypeConverter
 import com.example.esercizioapi.data.RicercaDati
 import kotlinx.serialization.Serializable
 
@@ -44,8 +41,13 @@ data class Pokemon (
     @Embedded
     val species : Specie = Specie("", "")
 ) {
-    constructor() : this(name = "", id = 0)
 }
+
+@Entity(tableName = "favourite")
+data class Favourite (
+    @PrimaryKey
+    val PokeName: String
+)
 
 
 @Serializable
