@@ -87,9 +87,9 @@ fun ProfileInfoScreen(modifier: Modifier = Modifier, nav : NavHostController){
                     .fillMaxWidth()
                     .padding(start = 10.dp, end = 10.dp),
                 onClick = {
-                    authenticator.deleteUser({
+                    authenticator.deleteUser {
                         nav.navigate(Authentication)
-                    })
+                    }
                 }
             ) {
                 Text(text = "Delete Account")

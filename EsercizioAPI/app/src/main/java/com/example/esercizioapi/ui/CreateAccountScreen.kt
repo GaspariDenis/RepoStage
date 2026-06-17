@@ -34,7 +34,7 @@ fun CreateAccountScreen(modifier: Modifier = Modifier, nav : NavHostController) 
     var fieldEmail by remember { mutableStateOf(TextFieldState()) }
     var fieldPassword by remember { mutableStateOf(TextFieldState()) }
     var fieldCheckPassword by remember { mutableStateOf(TextFieldState()) }
-    val Authenticator by remember { mutableStateOf(AuthenticationModel()) }
+    val authenticator by remember { mutableStateOf(AuthenticationModel()) }
 
 
     Column(
@@ -62,7 +62,7 @@ fun CreateAccountScreen(modifier: Modifier = Modifier, nav : NavHostController) 
         Row(
                 modifier = Modifier.padding(top = 20.dp)
         ){
-            var PasswordView by remember { mutableStateOf(false) }
+            var passwordView by remember { mutableStateOf(false) }
 
             Column(
                 modifier = Modifier.fillMaxWidth().weight(1f)
@@ -74,7 +74,7 @@ fun CreateAccountScreen(modifier: Modifier = Modifier, nav : NavHostController) 
                     onValueChange = {
                         fieldPassword.edit { replace(0,length,it) }
                     },
-                    visualTransformation = if(PasswordView) VisualTransformation.None else PasswordVisualTransformation(),
+                    visualTransformation = if(passwordView) VisualTransformation.None else PasswordVisualTransformation(),
                     label = {Text(text="Password")}
                 )
 
@@ -94,7 +94,7 @@ fun CreateAccountScreen(modifier: Modifier = Modifier, nav : NavHostController) 
                 modifier = Modifier.size(60.dp)
                     .clickable(
                         onClick = {
-                            PasswordView = !PasswordView
+                            passwordView = !passwordView
                         }
                     ),
                 painter = painterResource(R.drawable.occhio),
@@ -104,10 +104,9 @@ fun CreateAccountScreen(modifier: Modifier = Modifier, nav : NavHostController) 
 
         TextButton(
             onClick = {
-                if(fieldPassword.text.toString() != fieldCheckPassword.text.toString()){
-
-                }else if(fieldEmail.text.toString() != "" && fieldPassword.text.toString() != ""){
-                    Authenticator.createNewAccount(
+                if(fieldPassword.text.toString() != fieldCheckPassword.text.toString() &&
+                    fieldEmail.text.toString() != "" && fieldPassword.text.toString() != ""){
+                    authenticator.createNewAccount(
                         fieldEmail.text.toString(),
                         fieldPassword.text.toString(),
                         {
@@ -117,7 +116,7 @@ fun CreateAccountScreen(modifier: Modifier = Modifier, nav : NavHostController) 
                             testo = "Errore, riprova"
                         })
 
-                    if(Authenticator.currentUser != null){
+                    if(authenticator.currentUser != null){
                         nav.popBackStack()
                     }
                 }

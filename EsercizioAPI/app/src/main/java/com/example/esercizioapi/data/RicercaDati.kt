@@ -3,7 +3,7 @@ package com.example.esercizioapi.data
 import android.util.Log
 
 interface RicercaDati {
-    fun GetID() : String
+    fun getID() : String
 }
 
 class AlberoRicerca(
@@ -13,7 +13,7 @@ class AlberoRicerca(
 
     private fun inizializza() {
         for(element in lista){
-            padre.inserisci(element.GetID(), element)
+            padre.inserisci(element.getID(), element)
         }
     }
 
@@ -21,14 +21,14 @@ class AlberoRicerca(
         return padre.get(key)
     }
 
-    fun dfs(Pezzo : String) : List<RicercaDati> {
+    fun dfs(pezzo : String) : List<RicercaDati> {
 
-        if(Pezzo == ""){
+        if(pezzo == ""){
             Log.d("Struttura Dati", "Ritornata lista intera")
             return lista
         }
 
-        var node = padre.getNode(Pezzo)
+        var node = padre.getNode(pezzo)
         val coda = ArrayDeque<Nodo<RicercaDati>>()
 
         var lista : List<RicercaDati> = listOf()
@@ -63,9 +63,9 @@ class AlberoRicerca(
     }
 }
 
-class Nodo<T>(){
+class Nodo<T>{
     var child : MutableList<Nodo<T>?> = MutableList(26) {null}
-    var data : List<T> = mutableListOf<T>()
+    var data : List<T> = mutableListOf()
 
     fun inserisci(key : String, value : T){
         if(key == ""){
@@ -81,7 +81,7 @@ class Nodo<T>(){
         }
 
         if(child[carattere] == null)
-            child[carattere] = Nodo<T>()
+            child[carattere] = Nodo()
         child[carattere]?.inserisci(key.drop(1), value)
     }
 

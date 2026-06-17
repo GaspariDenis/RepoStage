@@ -73,7 +73,7 @@ fun Home(modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel
     val list by viewModel.stateflow.collectAsState()
     val paging = viewModel.userPagingFlow.collectAsLazyPagingItems()
 
-    viewModel.checkAlert()
+    viewModel.CheckAlert()
 
     val flowlistaFavourite = viewModel.retriveFavouritePokemon
     val StatelistaFavourite by viewModel.retriveFavouritePokemon.collectAsStateWithLifecycle(initialValue = UiState.Loading)
@@ -94,10 +94,7 @@ fun Home(modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel
         paging = paging,
         userPagingFlow = viewModel.userPagingFlow,
         listaFavourite = flowlistaFavourite,
-        onFavourite ={str -> viewModel.removeFavourite(str)},
-        onNonFavourite = {poke -> viewModel.insertFavourite(poke)},
         initRicerca = {viewModel.initRicerca()},
-        setPokemonName = {str -> viewModel.setPokemonName(str)},
         Favourite = listaFavourite
     )
 
@@ -115,10 +112,7 @@ fun Content(
     paging : LazyPagingItems<UiPokemon>,
     userPagingFlow : Flow<PagingData<UiPokemon>>,
     listaFavourite : Flow<UiState<List<UiPokemon>>>,
-    onFavourite: (UiPokemon) -> Unit,
-    onNonFavourite: (UiPokemon) -> Unit,
     Favourite : List<UiPokemon>,
-    setPokemonName : (String) -> Unit,
     initRicerca: () -> Unit
 ){
     var isFavourite by remember { mutableStateOf(false) }
@@ -159,7 +153,6 @@ fun Content(
                     Cards(list, onNavigation = { str ->
                         nav.navigate(PokemonRoute(str))
                     },
-                        onFavourite ={poke -> onFavourite(poke)},
                         isFavourite = Favourite,
                         )
                 }else{
@@ -168,10 +161,8 @@ fun Content(
                     }, {
                         paging.refresh()
                     },
-                        onFavourite = { poke -> onFavourite(poke) },
-                        onNonFavourite = { poke -> onNonFavourite(poke) },
-                        isFavourite = Favourite,
-                        setPokemonName = setPokemonName)
+                        isFavourite = Favourite
+                    )
                 }
             }else{
                 val listaF by listaFavourite.collectAsState(UiState.Loading)
@@ -187,7 +178,6 @@ fun Content(
                     onNavigation = {str ->
                     nav.navigate(PokemonRoute(str))
                     },
-                    onFavourite = {poke -> onFavourite(poke)},
                     isFavourite = Favourite
                 )
             }
@@ -200,10 +190,7 @@ fun Content(
 fun Paging(flow :Flow<PagingData<UiPokemon>>,
            onNavigation : (String) -> Unit,
            onRefresh : () -> Unit,
-           onFavourite: (UiPokemon) -> Unit,
-           onNonFavourite: (UiPokemon) -> Unit,
            isFavourite : List<UiPokemon>,
-           setPokemonName : (String) -> Unit
            ){
     val userFlow = flow
     val lazyPagingItems = userFlow.collectAsLazyPagingItems()
@@ -267,7 +254,6 @@ fun Barra(field : TextFieldState,
                     },
                     onSearch = {
                         onSearched()
-                        //field.edit { replace(0,length, "") }
                         expanded = false
                     },
                     expanded = expanded,
@@ -319,7 +305,6 @@ fun Barra(field : TextFieldState,
 @Composable
 fun Cards(pokemons : List<UiPokemon>,
           onNavigation: (String) -> Unit,
-          onFavourite: (UiPokemon) -> Unit,
           isFavourite : List<UiPokemon>,
 ) {
     LazyColumn(Modifier.fillMaxSize()) {

@@ -1,12 +1,10 @@
 package com.example.esercizioapi.network
 
-import androidx.compose.ui.Modifier
 import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.example.esercizioapi.data.RicercaDati
-import com.example.esercizioapi.network.UiPokemon
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -24,12 +22,12 @@ data class Infos(
     val name : String,
     val url : String,
 ) : RicercaDati {
-    override fun GetID(): String {
+    override fun getID(): String {
         return name
     }
 }
 
-@Entity(tableName = "pokemon",)
+@Entity(tableName = "pokemon")
 data class DbPokemon (
     val name : String,
     val weight : Int = 0,
@@ -65,7 +63,7 @@ data class NetPokemon (
 )
 
 //Se si trova dentro la tabella è un preferito
-@Entity(tableName = "favourite",)
+@Entity(tableName = "favourite")
 data class UiPokemon (
     val name : String,
     val weight : Int = 0,
@@ -78,16 +76,6 @@ data class UiPokemon (
     @Embedded
     val species : Specie = Specie("", "")
 ){
-    constructor(item : NetPokemon) : this(
-        name = item.name,
-        weight = item.weight,
-        id = item.id,
-        sprites = item.sprites,
-        abilities = item.abilities,
-        base_experience = item.base_experience,
-        species = item.species
-    )
-
     constructor(item : DbPokemon) : this(
         name = item.name,
         weight = item.weight,
@@ -112,8 +100,7 @@ data class Ability(
     val is_hidden : Boolean,
     @PrimaryKey
     val slot : Int,
-){
-}
+)
 
 @Serializable
 data class AbilityInfo(

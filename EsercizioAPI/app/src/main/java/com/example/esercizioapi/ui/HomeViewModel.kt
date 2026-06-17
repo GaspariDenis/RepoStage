@@ -1,5 +1,6 @@
 package com.example.esercizioapi.ui
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
@@ -18,8 +19,8 @@ import com.example.esercizioapi.network.PokePagingSource
 import com.example.esercizioapi.network.UiPokemon
 import com.example.esercizioapi.network.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
@@ -32,10 +33,10 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class HomeViewModel @Inject constructor(private val repository: Repository)
+class HomeViewModel @Inject constructor(repository: Repository)
     : ViewModel() {
 
-    private val TAG = "HomeViewModel"
+    private val tag = "HomeViewModel"
 
     val field : TextFieldState = TextFieldState()
 
@@ -52,7 +53,7 @@ class HomeViewModel @Inject constructor(private val repository: Repository)
             enablePlaceholders = true
         ),
         pagingSourceFactory = {
-            PokePagingSource(backend, 7, "")
+            PokePagingSource(backend, 7)
         }
     ).flow
         .cachedIn(viewModelScope)
@@ -68,6 +69,7 @@ class HomeViewModel @Inject constructor(private val repository: Repository)
                 }
             }
             catch (e: Exception) {
+                Log.e(tag, e.message!!)
                 backend.getContainer(0, backend.nPokemon)
             }
 
@@ -88,6 +90,7 @@ class HomeViewModel @Inject constructor(private val repository: Repository)
                 listName = listName + (item as Infos).name
             }
         }catch (e : Exception) {
+            Log.e(tag, e.message!!)
             listName = listOf("albero non inizializzato")
         }
         return listName
@@ -97,8 +100,6 @@ class HomeViewModel @Inject constructor(private val repository: Repository)
         viewModelScope.launch(Dispatchers.IO) {
             val out: List<UiPokemon>
             val list = searchName(query)
-
-            var jobs = listOf<Deferred<UiPokemon>>()
 
             out = buildList {
                 for (n in list) {
@@ -114,6 +115,7 @@ class HomeViewModel @Inject constructor(private val repository: Repository)
 
     private var _selectPokemonName = MutableStateFlow("")
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     val retriveInfoPokemon = _selectPokemonName.flatMapLatest {
         flow{
             emit(UiState.Loading)
@@ -154,17 +156,17 @@ class HomeViewModel @Inject constructor(private val repository: Repository)
     }
 
     @Composable
-    fun checkAlert() {
+    fun CheckAlert() {
 
         if(backend.firstState is UiState.Error){
-            alert((backend.firstState as UiState.Error).error.message!!)
+            Alert((backend.firstState as UiState.Error).error.message!!)
         }else if (backend.secondState is UiState.Error){
-            alert((backend.secondState as UiState.Error).error.message!!)
+            Alert((backend.secondState as UiState.Error).error.message!!)
         }
     }
 
     @Composable
-    private fun alert(message: String) {
+    private fun Alert(message: String) {
 
         Toast.makeText(LocalContext.current, "Errore: $message", Toast.LENGTH_LONG).show()
     }

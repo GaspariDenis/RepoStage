@@ -1,8 +1,6 @@
 package com.example.esercizioapi.ui
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -76,8 +74,7 @@ fun PokemonScreen(
             .padding(start = 15.dp, end = 15.dp, bottom = 15.dp, top = 15.dp)
             .fillMaxSize()
     ) {
-        Column(
-        ) {
+        Column{
             Row(
                 modifier = Modifier.fillMaxWidth()
             ) {

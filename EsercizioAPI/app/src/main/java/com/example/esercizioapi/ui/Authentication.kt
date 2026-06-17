@@ -34,9 +34,9 @@ import com.example.esercizioapi.R
 fun AuthenticationScreen(modifier: Modifier = Modifier, nav : NavHostController) {
     var fieldEmail by remember { mutableStateOf(TextFieldState()) }
     var fieldPassword by remember { mutableStateOf(TextFieldState()) }
-    val Authenticator by remember { mutableStateOf(AuthenticationModel()) }
+    val authenticator by remember { mutableStateOf(AuthenticationModel()) }
 
-    if(Authenticator.currentUser != null){
+    if(authenticator.currentUser != null){
         nav.navigate(Main)
     }
 
@@ -64,8 +64,8 @@ fun AuthenticationScreen(modifier: Modifier = Modifier, nav : NavHostController)
             label = {Text(text="Email")}
         )
 
-        Row() {
-            var PasswordView by remember { mutableStateOf(false) }
+        Row {
+            var passwordView by remember { mutableStateOf(false) }
 
             TextField(
                 modifier = Modifier
@@ -76,14 +76,14 @@ fun AuthenticationScreen(modifier: Modifier = Modifier, nav : NavHostController)
                     fieldPassword.edit { replace(0,length,it) }
                 },
                 label = {Text(text="Password")},
-                visualTransformation = if(PasswordView) VisualTransformation.None else PasswordVisualTransformation()
+                visualTransformation = if(passwordView) VisualTransformation.None else PasswordVisualTransformation()
             )
 
             Icon(
                 modifier = Modifier.size(60.dp)
                     .clickable(
                         onClick = {
-                            PasswordView = !PasswordView
+                            passwordView = !passwordView
                         }
                     ),
                 painter = painterResource(R.drawable.occhio),
@@ -94,7 +94,7 @@ fun AuthenticationScreen(modifier: Modifier = Modifier, nav : NavHostController)
         TextButton(
             onClick = {
                 if(fieldEmail.text.toString() != "" && fieldPassword.text.toString() != ""){
-                    Authenticator.signInWith(
+                    authenticator.signInWith(
                         fieldEmail.text.toString(),
                         fieldPassword.text.toString(),
                         {

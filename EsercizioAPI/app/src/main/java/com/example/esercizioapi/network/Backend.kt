@@ -19,7 +19,7 @@ sealed interface UiState<out T>{
 class Backend(
     val repository: Repository
 ){
-    private val TAG = "Backend"
+    private val tag = "Backend"
 
     var firstState : UiState<Container> by mutableStateOf(UiState.Loading)
         private set
@@ -47,30 +47,30 @@ class Backend(
 
     suspend fun getContainer(offset: Int, limit : Int) {
         firstState = try{
-            val listRes : Container
-            if(offset == 0 && limit == 0){
-                listRes = repository.getContainer(offset, limit)
+            val listRes = if(offset == 0 && limit == 0){
+                repository.getContainer(offset, limit)
             }else{
-                listRes = repository.getRangePokemon(offset, limit)
+                repository.getRangePokemon(offset, limit)
             }
+
             info = listRes
-            Log.d(TAG,listRes.toString())
+            Log.d(tag,listRes.toString())
             UiState.Success(listRes)
         }catch (e : IOException) {
-            Log.e(TAG, e.toString())
+            Log.e(tag, e.toString())
             UiState.Error(Throwable(e.message, e.cause))
         }
     }
 
     suspend fun getPokemon(name : String) {
         secondState = try{
-            Log.d(TAG, "Chiesto nome: $name")
+            Log.d(tag, "Chiesto nome: $name")
             val res = repository.getPokemon(name)
             infoPokemon = res
-            Log.d(TAG, res.toString())
+            Log.d(tag, res.toString())
             UiState.Success(res)
         }catch (e : IOException) {
-            Log.e(TAG, e.toString())
+            Log.e(tag, e.toString())
             UiState.Error(Throwable(e.message, e.cause))
         }
     }

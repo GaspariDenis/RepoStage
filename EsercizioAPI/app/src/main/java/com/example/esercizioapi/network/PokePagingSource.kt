@@ -8,17 +8,16 @@ import okio.IOException
 
 class PokePagingSource(
     private val backend: Backend,
-    val elementPage : Int,
-    val query: String
+    val elementPage : Int
 ) : PagingSource<Int, UiPokemon>()
 {
-    private val TAG = "Paging"
+    private val tag = "Paging"
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, UiPokemon> {
         try{
             val nextPageNumber = params.key ?: 1
 
-            Log.w(TAG, nextPageNumber.toString())
+            Log.w(tag, nextPageNumber.toString())
 
             val response = backend.getInfoPokemons((nextPageNumber - 1) * elementPage, elementPage)
 

@@ -79,7 +79,7 @@ class Repository @Inject constructor(
                     i += 1
                 }
             }
-            return ConvertPokemonsToContainer(pokes)
+            return convertPokemonsToContainer(pokes)
         }catch (e : Exception){
             Log.e(TAG, e.message!!)
             return api.getRangeInfo(offset.toString(), limit.toString())
@@ -98,7 +98,7 @@ class Repository @Inject constructor(
         val poke : UiPokemon
         withContext(Dispatchers.Default) {
             poke = pokemonDao.getFavourite(name)
-            Log.d(TAG, "Pokemon preferito: ${poke}")
+            Log.d(TAG, "Pokemon preferito: $poke")
         }
         return poke
     }
@@ -124,7 +124,7 @@ class Repository @Inject constructor(
     }
 }
 
-private fun ConvertPokemonsToContainer(list : List<DbPokemon>) : Container {
+private fun convertPokemonsToContainer(list : List<DbPokemon>) : Container {
     var infoList : List<Infos> = listOf()
 
     list.forEach { item->

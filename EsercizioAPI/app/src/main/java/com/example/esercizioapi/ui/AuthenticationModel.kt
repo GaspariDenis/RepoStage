@@ -6,7 +6,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 
 class AuthenticationModel : Activity() {
-    private val TAG = "Authentication"
+    private val tag = "Authentication"
     private val auth = Firebase.auth
 
     val currentUser = auth.currentUser
@@ -15,10 +15,10 @@ class AuthenticationModel : Activity() {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if(task.isSuccessful){
-                    Log.d(TAG, "createUserWithEmail:success")
+                    Log.d(tag, "createUserWithEmail:success")
                     onCreationSuccessful()
                 } else{
-                    Log.w(TAG, "createUserWithEmail:failed", task.exception)
+                    Log.w(tag, "createUserWithEmail:failed", task.exception)
                     onCreationFailed()
                 }
             }
@@ -28,10 +28,10 @@ class AuthenticationModel : Activity() {
         auth.signInWithEmailAndPassword(email,password)
             .addOnCompleteListener(this) { task ->
                 if(task.isSuccessful){
-                    Log.d(TAG, "signInWithEmail:success")
+                    Log.d(tag, "signInWithEmail:success")
                     onSingInSuccessful()
                 }else{
-                    Log.w(TAG, "signInWithEmail:failed", task.exception)
+                    Log.w(tag, "signInWithEmail:failed", task.exception)
                     onSignInFailure()
                 }
             }
@@ -45,21 +45,21 @@ class AuthenticationModel : Activity() {
         currentUser?.updatePassword(password)
             ?.addOnCompleteListener { task ->
                 if(task.isSuccessful) {
-                    Log.d(TAG, "User password updated.")
+                    Log.d(tag, "User password updated.")
                 }else{
-                    Log.w(TAG, "User password wasn't changed.")
+                    Log.w(tag, "User password wasn't changed.")
                 }
             }
     }
 
-    fun deleteUser(OnFinished : () -> Unit) {
+    fun deleteUser(onFinished : () -> Unit) {
         currentUser?.delete()
             ?.addOnCompleteListener { task ->
                 if(task.isSuccessful) {
-                    Log.d(TAG, "User account deleted.")
-                    OnFinished()
+                    Log.d(tag, "User account deleted.")
+                    onFinished()
                 }else{
-                    Log.w(TAG, "User unsuccessfully deleted.")
+                    Log.w(tag, "User unsuccessfully deleted.")
                 }
             }
     }
