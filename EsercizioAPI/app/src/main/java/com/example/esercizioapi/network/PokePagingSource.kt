@@ -10,11 +10,11 @@ class PokePagingSource(
     private val backend: Backend,
     val elementPage : Int,
     val query: String
-) : PagingSource<Int, Pokemon>()
+) : PagingSource<Int, UiPokemon>()
 {
     private val TAG = "Paging"
 
-    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Pokemon> {
+    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, UiPokemon> {
         try{
             val nextPageNumber = params.key ?: 1
 
@@ -36,7 +36,7 @@ class PokePagingSource(
         }
     }
 
-    override fun getRefreshKey(state: PagingState<Int, Pokemon>): Int? {
+    override fun getRefreshKey(state: PagingState<Int, UiPokemon>): Int? {
         return state.anchorPosition?.let { anchorPosition ->
             val anchorPage = state.closestPageToPosition(anchorPosition)
             anchorPage?.prevKey?.plus(1) ?: anchorPage?.nextKey?.minus(1)

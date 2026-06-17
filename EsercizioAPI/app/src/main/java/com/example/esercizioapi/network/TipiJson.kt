@@ -1,10 +1,12 @@
 package com.example.esercizioapi.network
 
+import androidx.compose.ui.Modifier
 import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.example.esercizioapi.data.RicercaDati
+import com.example.esercizioapi.network.UiPokemon
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -27,9 +29,8 @@ data class Infos(
     }
 }
 
-@Serializable
 @Entity(tableName = "pokemon",)
-data class Pokemon (
+data class DbPokemon (
     val name : String,
     val weight : Int = 0,
     @PrimaryKey
@@ -40,14 +41,63 @@ data class Pokemon (
     val base_experience : Int = -1,
     @Embedded
     val species : Specie = Specie("", "")
-) {
+){
+    constructor(item : NetPokemon) : this(
+        name = item.name,
+        weight = item.weight,
+        id = item.id,
+        sprites = item.sprites,
+        abilities = item.abilities,
+        base_experience = item.base_experience,
+        species = item.species
+    )
 }
 
-@Entity(tableName = "favourite")
-data class Favourite (
-    @PrimaryKey
-    val PokeName: String
+@Serializable
+data class NetPokemon (
+    val name : String,
+    val weight : Int = 0,
+    val id : Int,
+    val sprites : Sprite = Sprite("", ""),
+    val abilities : List<Ability> = listOf(),
+    val base_experience : Int = -1,
+    val species : Specie = Specie("", "")
 )
+
+//Se si trova dentro la tabella è un preferito
+@Entity(tableName = "favourite",)
+data class UiPokemon (
+    val name : String,
+    val weight : Int = 0,
+    @PrimaryKey
+    val id : Int,
+    @Embedded
+    val sprites : Sprite = Sprite("", ""),
+    val abilities : List<Ability> = listOf(),
+    val base_experience : Int = -1,
+    @Embedded
+    val species : Specie = Specie("", "")
+){
+    constructor(item : NetPokemon) : this(
+        name = item.name,
+        weight = item.weight,
+        id = item.id,
+        sprites = item.sprites,
+        abilities = item.abilities,
+        base_experience = item.base_experience,
+        species = item.species
+    )
+
+    constructor(item : DbPokemon) : this(
+        name = item.name,
+        weight = item.weight,
+        id = item.id,
+        sprites = item.sprites,
+        abilities = item.abilities,
+        base_experience = item.base_experience,
+        species = item.species
+    )
+}
 
 
 @Serializable

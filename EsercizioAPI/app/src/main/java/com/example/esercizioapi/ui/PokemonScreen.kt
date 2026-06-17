@@ -32,7 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.esercizioapi.R
-import com.example.esercizioapi.network.Pokemon
+import com.example.esercizioapi.network.UiPokemon
 import com.example.esercizioapi.network.UiState
 
 @Composable
@@ -52,9 +52,9 @@ fun PokemonScreen(
     }
 
     val poke = when(pokemon){
-            is UiState.Loading -> Pokemon(name = "Loading", id = -1)
-            is UiState.Error -> Pokemon(name = "Error", id = -2)
-            is UiState.Success -> (pokemon as UiState.Success<*>).json as Pokemon
+            is UiState.Loading -> UiPokemon(name = "Loading", id = -1)
+            is UiState.Error -> UiPokemon(name = "Error", id = -2)
+            is UiState.Success -> (pokemon as UiState.Success<*>).json as UiPokemon
         }
     //}
 
@@ -109,7 +109,7 @@ fun PokemonScreen(
 }
 
 @Composable
-fun Immagine(poke : Pokemon) {
+fun Immagine(poke : UiPokemon) {
     Row(
         verticalAlignment = Alignment.CenterVertically
     ){

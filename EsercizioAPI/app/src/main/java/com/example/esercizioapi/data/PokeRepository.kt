@@ -5,9 +5,9 @@ import androidx.room.Room
 import com.example.esercizioapi.Application
 import com.example.esercizioapi.network.APIService
 import com.example.esercizioapi.network.Container
+import com.example.esercizioapi.network.DbPokemon
 import com.example.esercizioapi.network.Infos
-import com.example.esercizioapi.network.Pokemon
-import com.example.esercizioapi.network.Favourite
+import com.example.esercizioapi.network.UiPokemon
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -43,29 +43,29 @@ class Repository @Inject constructor(
         }
     }
 
-    suspend fun getPokemon(name : String) : Pokemon {
+    suspend fun getPokemon(name : String) : UiPokemon {
         try{
             Log.d(TAG, "Cerco $name nel database locale.")
-            val poke : Pokemon
+            val poke : UiPokemon
             withContext(Dispatchers.Default){
-                poke = pokemonDao.getPokemon(name)
+                poke = UiPokemon(pokemonDao.getPokemon(name))
             }
             return poke
         }catch (e : Exception) {
             Log.e(TAG, e.message!!)
             Log.w(TAG, "Non è stato trovato nel database, inizio chiamata...")
-            val poke = api.getInfoPokemon(name)
+            val poke = DbPokemon(api.getInfoPokemon(name))
             Log.d(TAG, "Inserito nel database $poke")
             withContext(Dispatchers.Default){
                 pokemonDao.insertAll(poke)
             }
-            return poke
+            return UiPokemon(poke)
         }
     }
 
     suspend fun getRangePokemon(offset: Int, limit: Int) : Container {
         try{
-            val pokes : List<Pokemon>
+            val pokes : List<DbPokemon>
             withContext(Dispatchers.Default){
                 pokes = pokemonDao.getRangePokemon(offset, limit)
 
@@ -86,36 +86,45 @@ class Repository @Inject constructor(
         }
     }
 
-    suspend fun getFavouritePokemons() : List<Pokemon> {
-        val list : List<Pokemon>
+    suspend fun getFavouritePokemons() : List<UiPokemon> {
+        val list : List<UiPokemon>
         withContext(Dispatchers.Default){
             list = pokemonDao.getAll()
         }
         return list
     }
 
-    suspend fun getFavouritePokemon(name: String) : Pokemon {
-        val poke : Pokemon
+    suspend fun getFavouritePokemon(name: String) : UiPokemon {
+        val poke : UiPokemon
         withContext(Dispatchers.Default) {
             poke = pokemonDao.getFavourite(name)
+            Log.d(TAG, "Pokemon preferito: ${poke}")
         }
         return poke
     }
 
-    suspend fun insertFavouritePokemon(pokemons : Pokemon) {
+    suspend fun insertFavouritePokemon(pokemons : UiPokemon) {
         withContext(Dispatchers.Default) {
-            pokemonDao.insertFavourite(Favourite(pokemons.name))
+            try{
+                pokemonDao.insertFavourite(pokemons)
+            }catch (e : Exception) {
+                Log.e(TAG, e.message!!)
+            }
         }
     }
 
-    suspend fun removeFavouritePokemon(pokemons : Pokemon) {
+    suspend fun removeFavouritePokemon(pokemons : UiPokemon) {
         withContext(Dispatchers.Default) {
-            pokemonDao.deleteFavourite(Favourite(pokemons.name))
+            try {
+                pokemonDao.deleteFavourite(pokemons)
+            }catch (e : Exception) {
+                Log.e(TAG, e.message!!)
+            }
         }
     }
 }
 
-private fun ConvertPokemonsToContainer(list : List<Pokemon>) : Container {
+private fun ConvertPokemonsToContainer(list : List<DbPokemon>) : Container {
     var infoList : List<Infos> = listOf()
 
     list.forEach { item->

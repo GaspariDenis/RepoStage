@@ -22,7 +22,7 @@ interface APIService {
     @GET("pokemon/{id}")
     suspend fun getInfoPokemon(
         @Path("id") name : String
-    ) : Pokemon
+    ) : NetPokemon
 }
 
 @Module

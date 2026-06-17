@@ -15,7 +15,7 @@ import com.example.esercizioapi.data.Repository
 import com.example.esercizioapi.network.Backend
 import com.example.esercizioapi.network.Infos
 import com.example.esercizioapi.network.PokePagingSource
-import com.example.esercizioapi.network.Pokemon
+import com.example.esercizioapi.network.UiPokemon
 import com.example.esercizioapi.network.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Deferred
@@ -43,10 +43,10 @@ class HomeViewModel @Inject constructor(private val repository: Repository)
 
     lateinit var ricerca : AlberoRicerca
 
-    val flowRicercaPokemon = MutableStateFlow<List<Pokemon>?>(null)
+    val flowRicercaPokemon = MutableStateFlow<List<UiPokemon>?>(null)
     val stateflow = flowRicercaPokemon.asStateFlow()
 
-    val userPagingFlow : Flow<PagingData<Pokemon>> = Pager(
+    val userPagingFlow : Flow<PagingData<UiPokemon>> = Pager(
         config = PagingConfig(
             pageSize = 7,
             enablePlaceholders = true
@@ -95,10 +95,10 @@ class HomeViewModel @Inject constructor(private val repository: Repository)
 
     fun searchInfoPokemons(query : String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val out: List<Pokemon>
+            val out: List<UiPokemon>
             val list = searchName(query)
 
-            var jobs = listOf<Deferred<Pokemon>>()
+            var jobs = listOf<Deferred<UiPokemon>>()
 
             out = buildList {
                 for (n in list) {
@@ -125,17 +125,6 @@ class HomeViewModel @Inject constructor(private val repository: Repository)
         }
     }
 
-    val isFavourite = _selectPokemonName.flatMapLatest {
-        flow{
-            emit(UiState.Loading)
-            try{
-                emit(UiState.Success(backend.repository.getFavouritePokemon(_selectPokemonName.value).name == _selectPokemonName.value))
-            }catch (e : Exception){
-                emit(UiState.Error(e))
-            }
-        }
-    }
-
     fun setPokemonName(name : String) {
         _selectPokemonName.update {
             name
@@ -152,13 +141,13 @@ class HomeViewModel @Inject constructor(private val repository: Repository)
     }
 
 
-    fun insertFavourite(poke : Pokemon) {
+    fun insertFavourite(poke : UiPokemon) {
         viewModelScope.launch {
             backend.repository.insertFavouritePokemon(poke)
         }
     }
 
-    fun removeFavourite(poke : Pokemon) {
+    fun removeFavourite(poke : UiPokemon) {
         viewModelScope.launch {
             backend.repository.removeFavouritePokemon(poke)
         }

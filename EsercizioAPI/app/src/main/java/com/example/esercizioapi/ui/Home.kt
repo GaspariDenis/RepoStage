@@ -45,6 +45,7 @@ import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
@@ -54,7 +55,7 @@ import coil.compose.AsyncImage
 import com.example.esercizioapi.PokemonRoute
 import com.example.esercizioapi.ProfileInfo
 import com.example.esercizioapi.R
-import com.example.esercizioapi.network.Pokemon
+import com.example.esercizioapi.network.UiPokemon
 import com.example.esercizioapi.network.UiState
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
@@ -74,7 +75,7 @@ fun Home(modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel
 
     viewModel.checkAlert()
 
-    val listaFavourite by viewModel.retriveFavouritePokemon.collectAsState(initial = UiState.Loading)
+    val listaFavourite = viewModel.retriveFavouritePokemon
 
     Content(
         modifier = modifier,
@@ -89,7 +90,16 @@ fun Home(modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel
         onFavourite ={str -> viewModel.removeFavourite(str)},
         onNonFavourite = {poke -> viewModel.insertFavourite(poke)},
         initRicerca = {viewModel.initRicerca()},
-        Favourite = viewModel.isFavourite,
+        Favourite = {poke ->
+            val temp by viewModel.retriveFavouritePokemon.collectAsStateWithLifecycle(initialValue = UiState.Loading)
+            var list = listOf<UiPokemon>()
+            when(temp) {
+                is UiState.Success -> list = (temp as UiState.Success<*>).json as List<UiPokemon>
+                is UiState.Loading -> {}
+                is UiState.Error -> {}
+            }
+            return@Content list.contains(poke)
+        },
         setPokemonName = {str -> viewModel.setPokemonName(str)}
     )
 
@@ -103,13 +113,13 @@ fun Content(
     searchName : (String) -> List<String>,
     searchInfoPokemons: (String) -> Unit,
     nav : NavHostController,
-    list : List<Pokemon>?,
-    paging : LazyPagingItems<Pokemon>,
-    userPagingFlow : Flow<PagingData<Pokemon>>,
-    listaFavourite : UiState<List<Pokemon>>,
-    onFavourite: (Pokemon) -> Unit,
-    onNonFavourite: (Pokemon) -> Unit,
-    Favourite : Flow<UiState<Boolean>>,
+    list : List<UiPokemon>?,
+    paging : LazyPagingItems<UiPokemon>,
+    userPagingFlow : Flow<PagingData<UiPokemon>>,
+    listaFavourite : Flow<UiState<List<UiPokemon>>>,
+    onFavourite: (UiPokemon) -> Unit,
+    onNonFavourite: (UiPokemon) -> Unit,
+    Favourite : @Composable (UiPokemon) -> Boolean,
     setPokemonName : (String) -> Unit,
     initRicerca: () -> Unit
 ){
@@ -148,7 +158,7 @@ fun Content(
         ){
             if(!isFavourite) {
                 if(list != null && field.text != ""){
-                    Cards(list!!, onNavigation = { str ->
+                    Cards(list, onNavigation = { str ->
                         nav.navigate(PokemonRoute(str))
                     },
                         onFavourite ={poke -> onFavourite(poke)},
@@ -167,11 +177,12 @@ fun Content(
                         setPokemonName = setPokemonName)
                 }
             }else{
+                val listaF by listaFavourite.collectAsState(UiState.Loading)
 
-                var list : List<Pokemon> = listOf()
+                var list : List<UiPokemon> = listOf()
 
-                when(listaFavourite) {
-                    is UiState.Success -> list = listaFavourite.json
+                when(listaF) {
+                    is UiState.Success -> list = (listaF as UiState.Success<*>).json as List<UiPokemon>
                     is UiState.Error -> {}
                     is UiState.Loading -> {}
                 }
@@ -189,12 +200,12 @@ fun Content(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Paging(flow :Flow<PagingData<Pokemon>>,
+fun Paging(flow :Flow<PagingData<UiPokemon>>,
            onNavigation : (String) -> Unit,
            onRefresh : () -> Unit,
-           onFavourite: (Pokemon) -> Unit,
-           onNonFavourite: (Pokemon) -> Unit,
-           isFavourite : Flow<UiState<Boolean>>,
+           onFavourite: (UiPokemon) -> Unit,
+           onNonFavourite: (UiPokemon) -> Unit,
+           isFavourite : @Composable (UiPokemon) -> Boolean,
            setPokemonName : (String) -> Unit
            ){
     val userFlow = flow
@@ -311,12 +322,12 @@ fun Barra(field : TextFieldState,
 }
 
 @Composable
-fun Cards(pokemons : List<Pokemon>,
+fun Cards(pokemons : List<UiPokemon>,
           onNavigation: (String) -> Unit,
           modifier: Modifier = Modifier,
-          onFavourite: (Pokemon) -> Unit,
-          onNonFavourite: (Pokemon) -> Unit,
-          isFavourite : Flow<UiState<Boolean>>,
+          onFavourite: (UiPokemon) -> Unit,
+          onNonFavourite: (UiPokemon) -> Unit,
+          isFavourite : @Composable (UiPokemon) -> Boolean,
           setPokemonName : (String) -> Unit
 ) {
     LazyColumn(Modifier.fillMaxSize()) {
@@ -336,13 +347,14 @@ fun Cards(pokemons : List<Pokemon>,
 }
 
 @Composable
-fun Card(poke : Pokemon,
+fun Card(poke : UiPokemon,
          modifier: Modifier = Modifier,
          onNavigation: (String) -> Unit,
-         onFavourite: (Pokemon) -> Unit,
-         onNonFavourite: (Pokemon) -> Unit,
-         isFavourite : Flow<UiState<Boolean>>,
+         onFavourite: (UiPokemon) -> Unit,
+         onNonFavourite: (UiPokemon) -> Unit,
+         isFavourite : @Composable (UiPokemon) -> Boolean,
          setPokemonName : (String) -> Unit) {
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -384,25 +396,26 @@ fun Card(poke : Pokemon,
                 if(poke.name != "ERROR"){
                     setPokemonName(poke.name)
 
-                    val flow by isFavourite.collectAsState(initial = UiState.Loading)
+                    var favourite = isFavourite(poke)
 
-                    when(flow) {
-                        is UiState.Loading -> {}
-                        is UiState.Error -> {
-                            Favourite(
-                                isFavourite = false,
-                                onFavourite = { onFavourite(poke)},
-                                onNonFavourite = { onNonFavourite(poke) }
-                            )
-                        }
-                        is UiState.Success -> {
-                            Favourite(
-                                isFavourite = (flow as UiState.Success<Boolean>).json,
-                                onFavourite =  { onFavourite(poke) },
-                                onNonFavourite =  {onNonFavourite(poke) }
-                            )
-                        }
-                    }
+
+                    Image(
+                        modifier = modifier
+                            .size(60.dp)
+                            .clickable(onClick = {
+                                if (favourite){
+                                    onFavourite(poke)
+                                }
+                                else{
+                                    onNonFavourite(poke)
+                                }
+                                favourite != favourite
+                            }),
+                        painter = if(favourite)
+                            painterResource(R.drawable.stella_gialla)
+                        else painterResource(R.drawable.stella_nera),
+                        contentDescription = null
+                    )
                 }
 
                 Text(
@@ -423,10 +436,12 @@ fun Favourite(modifier: Modifier = Modifier,
         modifier = modifier
             .size(60.dp)
             .clickable(onClick = {
-                if (isFavourite)
+                if (isFavourite){
                     onFavourite()
-                else
+                }
+                else{
                     onNonFavourite()
+                }
             }),
         painter = if(isFavourite)
             painterResource(R.drawable.stella_gialla)

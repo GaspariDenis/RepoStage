@@ -24,13 +24,13 @@ class Backend(
     var firstState : UiState<Container> by mutableStateOf(UiState.Loading)
         private set
 
-    var secondState : UiState<Pokemon> by mutableStateOf(UiState.Loading)
+    var secondState : UiState<UiPokemon> by mutableStateOf(UiState.Loading)
         private set
 
     lateinit var info : Container
         private set
 
-    lateinit var infoPokemon: Pokemon
+    lateinit var infoPokemon: UiPokemon
         private set
 
     var nPokemon : Int = 0
@@ -75,18 +75,18 @@ class Backend(
         }
     }
 
-    suspend fun getInfoPokemon(name : String) : Pokemon {
+    suspend fun getInfoPokemon(name : String) : UiPokemon {
         getPokemon(name)
 
         if (secondState is UiState.Success)
             return infoPokemon
 
         errorCount -= 1
-        return Pokemon("Error", -1, errorCount)
+        return UiPokemon("Error", -1, errorCount)
     }
 
-    suspend fun getInfoPokemons(page: Int, itemPerPage : Int): List<Pokemon> {
-        var out = listOf<Pokemon>()
+    suspend fun getInfoPokemons(page: Int, itemPerPage : Int): List<UiPokemon> {
+        var out = listOf<UiPokemon>()
         getContainer(page, itemPerPage)
 
         if(firstState is UiState.Success){
