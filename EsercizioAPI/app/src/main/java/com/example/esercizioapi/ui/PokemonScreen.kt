@@ -1,5 +1,6 @@
 package com.example.esercizioapi.ui
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -60,7 +61,9 @@ fun PokemonScreen(
         }
 
     val favourite by viewModel.retriveFavouritePokemon.collectAsStateWithLifecycle(initialValue = UiState.Loading)
-    var isFavourite = when(favourite) {
+    var isFavourite by remember {  mutableStateOf( false)}
+
+    isFavourite = when(favourite) {
         is UiState.Success -> {
             ((favourite as UiState.Success<*>).json as List<*>).contains(poke)
         }

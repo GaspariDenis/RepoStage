@@ -225,7 +225,6 @@ fun Paging(flow :Flow<PagingData<UiPokemon>>,
                 if(poke != null){
                     Card(poke,
                         onNavigation = onNavigation,
-                        onFavourite = { poke -> onFavourite(poke)},
                         isFavourite = isFavourite.contains(poke)
                     )
                 }
@@ -328,9 +327,8 @@ fun Cards(pokemons : List<UiPokemon>,
             items = pokemons,
             itemContent = {
                     poke->
-                Card(poke,
+                Card(poke = poke,
                     onNavigation = onNavigation,
-                    onFavourite = onFavourite,
                     isFavourite = isFavourite.contains(poke),)
             }
         )
@@ -341,7 +339,6 @@ fun Cards(pokemons : List<UiPokemon>,
 fun Card(poke : UiPokemon,
          modifier: Modifier = Modifier,
          onNavigation: (String) -> Unit,
-         onFavourite: (UiPokemon) -> Unit,
          isFavourite : Boolean,) {
 
     Card(
@@ -385,10 +382,7 @@ fun Card(poke : UiPokemon,
                 if(isFavourite){
                     Image(
                         modifier = modifier
-                            .size(60.dp)
-                            .clickable(onClick = {
-                                onFavourite(poke)
-                            }),
+                            .size(60.dp),
                         painter = painterResource(R.drawable.stella_gialla),
                         contentDescription = null
                     )
