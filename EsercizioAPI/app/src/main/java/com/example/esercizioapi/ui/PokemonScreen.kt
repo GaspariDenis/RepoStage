@@ -1,9 +1,11 @@
 package com.example.esercizioapi.ui
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -56,7 +58,15 @@ fun PokemonScreen(
             is UiState.Error -> UiPokemon(name = "Error", id = -2)
             is UiState.Success -> (pokemon as UiState.Success<*>).json as UiPokemon
         }
-    //}
+
+    val favourite by viewModel.retriveFavouritePokemon.collectAsStateWithLifecycle(initialValue = UiState.Loading)
+    var isFavourite = when(favourite) {
+        is UiState.Success -> {
+            ((favourite as UiState.Success<*>).json as List<*>).contains(poke)
+        }
+        is UiState.Loading -> false
+        is UiState.Error -> false
+    }
 
     Card(
         modifier = modifier
@@ -65,19 +75,43 @@ fun PokemonScreen(
     ) {
         Column(
         ) {
-            Icon(
-                modifier = Modifier
-                    .height(70.dp)
-                    .width(70.dp)
-                    .padding(top = 20.dp, start = 15.dp)
-                    .clickable(
-                        onClick = {
-                            nav.popBackStack()
-                        }
-                    ),
-                painter = painterResource(R.drawable.freccia_indietro),
-                contentDescription = "",
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    modifier = Modifier
+                        .height(70.dp)
+                        .width(70.dp)
+                        .padding(top = 20.dp, start = 15.dp)
+                        .clickable(
+                            onClick = {
+                                nav.popBackStack()
+                            }
+                        ),
+                    painter = painterResource(R.drawable.freccia_indietro),
+                    contentDescription = "",
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Image(
+                    modifier = Modifier
+                        .height(70.dp)
+                        .width(70.dp)
+                        .padding(top = 20.dp, start = 15.dp)
+                        .clickable(
+                            onClick = {
+                                if (isFavourite){
+                                    viewModel.removeFavourite(poke)
+                                }else{
+                                    viewModel.insertFavourite(poke)
+                                }
+                                isFavourite = !isFavourite
+                            }
+                        ),
+                    painter = if(isFavourite) painterResource(R.drawable.stella_gialla)
+                              else painterResource(R.drawable.stella_nera),
+                    contentDescription = null
+                )
+            }
 
             Immagine(poke)
 

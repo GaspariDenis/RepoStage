@@ -75,7 +75,14 @@ fun Home(modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel
 
     viewModel.checkAlert()
 
-    val listaFavourite = viewModel.retriveFavouritePokemon
+    val flowlistaFavourite = viewModel.retriveFavouritePokemon
+    val StatelistaFavourite by viewModel.retriveFavouritePokemon.collectAsStateWithLifecycle(initialValue = UiState.Loading)
+
+    val listaFavourite = when(StatelistaFavourite) {
+        is UiState.Success -> (StatelistaFavourite as UiState.Success<List<UiPokemon>>).json
+        is UiState.Loading -> listOf<UiPokemon>()
+        is UiState.Error -> listOf<UiPokemon>()
+    }
 
     Content(
         modifier = modifier,
@@ -86,21 +93,12 @@ fun Home(modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel
         list = list,
         paging = paging,
         userPagingFlow = viewModel.userPagingFlow,
-        listaFavourite = listaFavourite,
+        listaFavourite = flowlistaFavourite,
         onFavourite ={str -> viewModel.removeFavourite(str)},
         onNonFavourite = {poke -> viewModel.insertFavourite(poke)},
         initRicerca = {viewModel.initRicerca()},
-        Favourite = {poke ->
-            val temp by viewModel.retriveFavouritePokemon.collectAsStateWithLifecycle(initialValue = UiState.Loading)
-            var list = listOf<UiPokemon>()
-            when(temp) {
-                is UiState.Success -> list = (temp as UiState.Success<*>).json as List<UiPokemon>
-                is UiState.Loading -> {}
-                is UiState.Error -> {}
-            }
-            return@Content list.contains(poke)
-        },
-        setPokemonName = {str -> viewModel.setPokemonName(str)}
+        setPokemonName = {str -> viewModel.setPokemonName(str)},
+        Favourite = listaFavourite
     )
 
 }
@@ -119,7 +117,7 @@ fun Content(
     listaFavourite : Flow<UiState<List<UiPokemon>>>,
     onFavourite: (UiPokemon) -> Unit,
     onNonFavourite: (UiPokemon) -> Unit,
-    Favourite : @Composable (UiPokemon) -> Boolean,
+    Favourite : List<UiPokemon>,
     setPokemonName : (String) -> Unit,
     initRicerca: () -> Unit
 ){
@@ -162,9 +160,8 @@ fun Content(
                         nav.navigate(PokemonRoute(str))
                     },
                         onFavourite ={poke -> onFavourite(poke)},
-                        onNonFavourite = {poke -> onNonFavourite(poke)},
                         isFavourite = Favourite,
-                        setPokemonName = setPokemonName)
+                        )
                 }else{
                     Paging(userPagingFlow, onNavigation = { str ->
                         nav.navigate(PokemonRoute(str))
@@ -186,13 +183,13 @@ fun Content(
                     is UiState.Error -> {}
                     is UiState.Loading -> {}
                 }
-                Cards(list, onNavigation = {str ->
+                Cards(list,
+                    onNavigation = {str ->
                     nav.navigate(PokemonRoute(str))
-                },
+                    },
                     onFavourite = {poke -> onFavourite(poke)},
-                    onNonFavourite = {poke -> onNonFavourite(poke)},
-                    isFavourite = Favourite,
-                    setPokemonName = setPokemonName)
+                    isFavourite = Favourite
+                )
             }
         }
     }
@@ -205,7 +202,7 @@ fun Paging(flow :Flow<PagingData<UiPokemon>>,
            onRefresh : () -> Unit,
            onFavourite: (UiPokemon) -> Unit,
            onNonFavourite: (UiPokemon) -> Unit,
-           isFavourite : @Composable (UiPokemon) -> Boolean,
+           isFavourite : List<UiPokemon>,
            setPokemonName : (String) -> Unit
            ){
     val userFlow = flow
@@ -225,14 +222,13 @@ fun Paging(flow :Flow<PagingData<UiPokemon>>,
             ) {
                     index ->
                 val poke = lazyPagingItems[index]
-                if(poke != null)
+                if(poke != null){
                     Card(poke,
                         onNavigation = onNavigation,
                         onFavourite = { poke -> onFavourite(poke)},
-                        onNonFavourite = {poke -> onNonFavourite(poke)},
-                        isFavourite = isFavourite,
-                        setPokemonName = setPokemonName
-                        )
+                        isFavourite = isFavourite.contains(poke)
+                    )
+                }
             }
         }
     }
@@ -324,11 +320,8 @@ fun Barra(field : TextFieldState,
 @Composable
 fun Cards(pokemons : List<UiPokemon>,
           onNavigation: (String) -> Unit,
-          modifier: Modifier = Modifier,
           onFavourite: (UiPokemon) -> Unit,
-          onNonFavourite: (UiPokemon) -> Unit,
-          isFavourite : @Composable (UiPokemon) -> Boolean,
-          setPokemonName : (String) -> Unit
+          isFavourite : List<UiPokemon>,
 ) {
     LazyColumn(Modifier.fillMaxSize()) {
         items(
@@ -338,9 +331,7 @@ fun Cards(pokemons : List<UiPokemon>,
                 Card(poke,
                     onNavigation = onNavigation,
                     onFavourite = onFavourite,
-                    onNonFavourite = onNonFavourite,
-                    isFavourite = isFavourite,
-                    setPokemonName = setPokemonName)
+                    isFavourite = isFavourite.contains(poke),)
             }
         )
     }
@@ -351,9 +342,7 @@ fun Card(poke : UiPokemon,
          modifier: Modifier = Modifier,
          onNavigation: (String) -> Unit,
          onFavourite: (UiPokemon) -> Unit,
-         onNonFavourite: (UiPokemon) -> Unit,
-         isFavourite : @Composable (UiPokemon) -> Boolean,
-         setPokemonName : (String) -> Unit) {
+         isFavourite : Boolean,) {
 
     Card(
         modifier = modifier
@@ -393,27 +382,14 @@ fun Card(poke : UiPokemon,
             }
 
             Column() {
-                if(poke.name != "ERROR"){
-                    setPokemonName(poke.name)
-
-                    var favourite = isFavourite(poke)
-
-
+                if(isFavourite){
                     Image(
                         modifier = modifier
                             .size(60.dp)
                             .clickable(onClick = {
-                                if (favourite){
-                                    onFavourite(poke)
-                                }
-                                else{
-                                    onNonFavourite(poke)
-                                }
-                                favourite != favourite
+                                onFavourite(poke)
                             }),
-                        painter = if(favourite)
-                            painterResource(R.drawable.stella_gialla)
-                        else painterResource(R.drawable.stella_nera),
+                        painter = painterResource(R.drawable.stella_gialla),
                         contentDescription = null
                     )
                 }
@@ -425,29 +401,6 @@ fun Card(poke : UiPokemon,
             }
         }
     }
-}
-
-@Composable
-fun Favourite(modifier: Modifier = Modifier,
-              isFavourite : Boolean,
-              onFavourite : () -> Unit,
-              onNonFavourite : () -> Unit) {
-    Image(
-        modifier = modifier
-            .size(60.dp)
-            .clickable(onClick = {
-                if (isFavourite){
-                    onFavourite()
-                }
-                else{
-                    onNonFavourite()
-                }
-            }),
-        painter = if(isFavourite)
-            painterResource(R.drawable.stella_gialla)
-        else painterResource(R.drawable.stella_nera),
-        contentDescription = null
-    )
 }
 
 @Composable
