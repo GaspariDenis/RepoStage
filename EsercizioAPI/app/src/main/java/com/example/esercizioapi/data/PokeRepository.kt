@@ -81,7 +81,8 @@ class Repository @Inject constructor(
             }
             return convertPokemonsToContainer(pokes)
         }catch (e : Exception){
-            Log.e(TAG, e.message!!)
+            val message = e.message
+            if (message != null) Log.e(TAG, message)
             return api.getRangeInfo(offset.toString(), limit.toString())
         }
     }

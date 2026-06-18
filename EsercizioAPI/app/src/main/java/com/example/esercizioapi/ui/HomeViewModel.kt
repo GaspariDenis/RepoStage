@@ -56,8 +56,7 @@ class HomeViewModel @Inject constructor(repository: Repository)
         pagingSourceFactory = {
             PokePagingSource(backend, 7)
         }
-    ).flow
-        .cachedIn(viewModelScope)
+    ).flow.cachedIn(viewModelScope)
 
     fun initRicerca() {
         viewModelScope.launch(Dispatchers.IO) {

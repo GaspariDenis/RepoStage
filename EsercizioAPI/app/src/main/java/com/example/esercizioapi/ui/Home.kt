@@ -65,9 +65,10 @@ private const val tag = "UI"
 
 @SuppressLint("StateFlowValueCalledInComposition", "UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun Home(modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel(),
-         nav : NavHostController
-         ) {
+fun Home(
+    modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel(),
+    nav: NavHostController
+) {
     val field = viewModel.field
 
     val list by viewModel.stateflow.collectAsState()
@@ -75,10 +76,11 @@ fun Home(modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel
 
     viewModel.CheckAlert()
 
-    val flowlistaFavourite = viewModel.retriveFavouritePokemon
-    val statelistaFavourite by viewModel.retriveFavouritePokemon.collectAsStateWithLifecycle(initialValue = UiState.Loading)
+    val statelistaFavourite by viewModel.retriveFavouritePokemon.collectAsStateWithLifecycle(
+        initialValue = UiState.Loading
+    )
 
-    val listaFavourite = when(statelistaFavourite) {
+    val listaFavourite = when (statelistaFavourite) {
         is UiState.Success -> (statelistaFavourite as UiState.Success<List<UiPokemon>>).json
         is UiState.Loading -> listOf()
         is UiState.Error -> listOf()
@@ -87,14 +89,16 @@ fun Home(modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel
     Content(
         modifier = modifier,
         field = field,
-        searchName ={str -> viewModel.searchName(str)},
-        searchInfoPokemons ={str -> viewModel.searchInfoPokemons(str)},
+        searchName = { str -> viewModel.searchName(str) },
+        searchInfoPokemons = { str -> viewModel.searchInfoPokemons(str) },
         nav = nav,
         list = list,
         paging = paging,
         userPagingFlow = viewModel.userPagingFlow,
-        initRicerca = {viewModel.initRicerca()},
-        favourite = listaFavourite
+        initRicerca = { viewModel.initRicerca() },
+        favourite = listaFavourite,
+        onAddFavorite = viewModel::insertFavourite,
+        onRemoveFavorite = { poke -> viewModel.removeFavourite(poke) },
     )
 
 }
@@ -103,30 +107,32 @@ fun Home(modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel
 @Composable
 fun Content(
     modifier: Modifier = Modifier,
-    field : TextFieldState,
-    searchName : (String) -> List<String>,
+    nav: NavHostController,
+    field: TextFieldState,
+    favourite: List<UiPokemon>,
+    list: List<UiPokemon>?,
+    paging: LazyPagingItems<UiPokemon>,
+    userPagingFlow: Flow<PagingData<UiPokemon>>,
+    searchName: (String) -> List<String>,
     searchInfoPokemons: (String) -> Unit,
-    nav : NavHostController,
-    list : List<UiPokemon>?,
-    paging : LazyPagingItems<UiPokemon>,
-    userPagingFlow : Flow<PagingData<UiPokemon>>,
-    favourite : List<UiPokemon>,
-    initRicerca: () -> Unit
-){
+    initRicerca: () -> Unit,
+    onAddFavorite: (UiPokemon) -> Unit,
+    onRemoveFavorite: (UiPokemon) -> Unit,
+) {
     var isFavourite by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             Barra(
                 field,
-                {searchName(field.text.toString().lowercase())},
+                { searchName(field.text.toString().lowercase()) },
                 {
                     searchInfoPokemons(field.text.toString().lowercase())
                 },
                 {},
                 initRicerca = initRicerca,
+                nav = nav,
                 modifier = Modifier,
-                nav
             )
         },
         bottomBar = {
@@ -144,24 +150,29 @@ fun Content(
             modifier
                 .fillMaxSize()
                 .semantics { isTraversalGroup = true }
-        ){
-            if(!isFavourite) {
-                if(list != null && field.text != ""){
-                    Cards(list, onNavigation = { str ->
-                        nav.navigate(PokemonRoute(str))
-                    },
+        ) {
+            if (!isFavourite) {
+                if (list != null && field.text != "") {
+                    Cards(
+                        list,
+                        onNavigation = { str ->
+                            nav.navigate(PokemonRoute(str))
+                        },
                         isFavourite = favourite,
-                        )
-                }else{
-                    Paging(userPagingFlow, onNavigation = { str ->
-                        nav.navigate(PokemonRoute(str))
-                    }, {
-                        paging.refresh()
-                    },
+                    )
+                } else {
+                    Paging(
+                        userPagingFlow,
+                        onNavigation = { str ->
+                            nav.navigate(PokemonRoute(str))
+                        },
+                        {
+                            paging.refresh()
+                        },
                         isFavourite = favourite
                     )
                 }
-            }else{
+            } else {
                 /*
                 val listaF by listaFavourite.collectAsState(UiState.Loading)
 
@@ -172,10 +183,13 @@ fun Content(
                     is UiState.Error -> {}
                     is UiState.Loading -> {}
                 }*/
-                Cards(favourite,
-                    onNavigation = {str ->
-                    nav.navigate(PokemonRoute(str))
+                Cards(
+                    pokemons = favourite,
+                    onNavigation = { str ->
+                        nav.navigate(PokemonRoute(str))
                     },
+                    onAddFavorite = onAddFavorite,
+                    onRemoveFavorite = onRemoveFavorite,
                     isFavourite = favourite
                 )
             }
@@ -185,11 +199,12 @@ fun Content(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Paging(flow :Flow<PagingData<UiPokemon>>,
-           onNavigation : (String) -> Unit,
-           onRefresh : () -> Unit,
-           isFavourite : List<UiPokemon>,
-           ){
+fun Paging(
+    flow: Flow<PagingData<UiPokemon>>,
+    onNavigation: (String) -> Unit,
+    onRefresh: () -> Unit,
+    isFavourite: List<UiPokemon>,
+) {
     val lazyPagingItems = flow.collectAsLazyPagingItems()
 
     PullToRefreshBox(
@@ -203,11 +218,11 @@ fun Paging(flow :Flow<PagingData<UiPokemon>>,
             items(
                 lazyPagingItems.itemCount,
                 key = lazyPagingItems.itemKey { it.id }
-            ) {
-                    index ->
+            ) { index ->
                 val poke = lazyPagingItems[index]
-                if(poke != null){
-                    Card(poke,
+                if (poke != null) {
+                    PokemonCard(
+                        poke = poke,
                         onNavigation = onNavigation,
                         isFavourite = isFavourite.contains(poke)
                     )
@@ -219,25 +234,28 @@ fun Paging(flow :Flow<PagingData<UiPokemon>>,
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Barra(field : TextFieldState,
-          result : () -> List<String>,
-          onSearched : () -> Unit,
-          onModifier: () -> Unit,
-          initRicerca : () -> Unit,
-          modifier: Modifier,
-          nav : NavHostController,
+fun Barra(
+    field: TextFieldState,
+    result: () -> List<String>,
+    onSearched: () -> Unit,
+    onModifier: () -> Unit,
+    initRicerca: () -> Unit,
+    modifier: Modifier,
+    nav: NavHostController,
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    if(expanded){
+    if (expanded) {
         LaunchedEffect(true) {
             initRicerca()
         }
     }
 
-    Row(modifier = modifier
-        .fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically){
+    Row(
+        modifier = modifier
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         SearchBar(
             modifier = modifier
                 .padding(start = 10.dp, end = 10.dp)
@@ -245,9 +263,9 @@ fun Barra(field : TextFieldState,
             inputField = {
                 SearchBarDefaults.InputField(
                     query = field.text.toString(),
-                    onQueryChange = {str ->
+                    onQueryChange = { str ->
                         onModifier()
-                        field.edit { replace(0,length, str) }
+                        field.edit { replace(0, length, str) }
                     },
                     onSearch = {
                         onSearched()
@@ -255,7 +273,7 @@ fun Barra(field : TextFieldState,
                     },
                     expanded = expanded,
                     onExpandedChange = { expanded = it },
-                    placeholder = {Text("Ciao ${Firebase.auth.currentUser?.email}")}
+                    placeholder = { Text("Ciao ${Firebase.auth.currentUser?.email}") }
                 )
             },
             expanded = expanded,
@@ -266,9 +284,9 @@ fun Barra(field : TextFieldState,
             ) {
                 items(
                     items = result(),
-                    itemContent = {result->
+                    itemContent = { result ->
                         ListItem(
-                            headlineContent = {Text(result)},
+                            headlineContent = { Text(result) },
                             modifier = Modifier
                                 .clickable {
                                     field.edit { replace(0, length, result) }
@@ -281,7 +299,7 @@ fun Barra(field : TextFieldState,
             }
         }
 
-        if(!expanded){
+        if (!expanded) {
             Image(
                 modifier = Modifier
                     .padding(end = 10.dp, top = 25.dp)
@@ -300,28 +318,38 @@ fun Barra(field : TextFieldState,
 }
 
 @Composable
-fun Cards(pokemons : List<UiPokemon>,
-          onNavigation: (String) -> Unit,
-          isFavourite : List<UiPokemon>,
+fun Cards(
+    pokemons: List<UiPokemon>,
+    onNavigation: (String) -> Unit,
+    onAddFavorite: ((UiPokemon) -> Unit)? = null,
+    onRemoveFavorite: ((UiPokemon) -> Unit)? = null,
+    isFavourite: List<UiPokemon>,
 ) {
     LazyColumn(Modifier.fillMaxSize()) {
         items(
             items = pokemons,
-            itemContent = {
-                    poke->
-                Card(poke = poke,
+            itemContent = { poke ->
+                PokemonCard(
+                    poke = poke,
                     onNavigation = onNavigation,
-                    isFavourite = isFavourite.contains(poke),)
+                    isFavourite = isFavourite.contains(poke),
+                    onAddFavorite = onAddFavorite,
+                    onRemoveFavorite = onRemoveFavorite
+                )
             }
         )
     }
 }
 
 @Composable
-fun Card(poke : UiPokemon,
-         modifier: Modifier = Modifier,
-         onNavigation: (String) -> Unit,
-         isFavourite : Boolean,) {
+fun PokemonCard(
+    poke: UiPokemon,
+    modifier: Modifier = Modifier,
+    onNavigation: (String) -> Unit,
+    isFavourite: Boolean,
+    onAddFavorite: ((UiPokemon) -> Unit)? = null,
+    onRemoveFavorite: ((UiPokemon) -> Unit)? = null
+) {
 
     Card(
         modifier = modifier
@@ -361,12 +389,13 @@ fun Card(poke : UiPokemon,
             }
 
             Column {
-                if(isFavourite){
+                if (isFavourite) {
                     Image(
-                        modifier = modifier
-                            .size(60.dp),
                         painter = painterResource(R.drawable.stella_gialla),
-                        contentDescription = null
+                        contentDescription = null,
+                        modifier = modifier.size(60.dp).clickable{
+                            if (!isFavourite) onAddFavorite?.invoke(poke) else onRemoveFavorite?.invoke(poke)
+                        },
                     )
                 }
 
@@ -381,8 +410,8 @@ fun Card(poke : UiPokemon,
 
 @Composable
 fun BottomBar(
-    onClickHome : () -> Unit,
-    onClickFavourite : () -> Unit
+    onClickHome: () -> Unit,
+    onClickFavourite: () -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
