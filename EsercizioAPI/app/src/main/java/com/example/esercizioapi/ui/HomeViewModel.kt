@@ -4,6 +4,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -133,25 +134,30 @@ class HomeViewModel @Inject constructor(repository: Repository)
         }
     }
 
-    val retriveFavouritePokemon = flow{
-        emit(UiState.Loading)
-        try{
-            emit(UiState.Success(backend.repository.getFavouritePokemons()))
-        }catch (e : Exception) {
-            emit(UiState.Error(e))
+    val refreshStare = MutableStateFlow(System.currentTimeMillis())
+
+    val retriveFavouritePokemon = refreshStare.flatMapLatest {
+        flow{
+            emit(UiState.Loading)
+            try{
+                emit(UiState.Success(backend.repository.getFavouritePokemons()))
+            }catch (e : Exception) {
+                emit(UiState.Error(e))
+            }
         }
     }
-
 
     fun insertFavourite(poke : UiPokemon) {
         viewModelScope.launch {
             backend.repository.insertFavouritePokemon(poke)
+            refreshStare.update { System.currentTimeMillis() }
         }
     }
 
     fun removeFavourite(poke : UiPokemon) {
         viewModelScope.launch {
             backend.repository.removeFavouritePokemon(poke)
+            refreshStare.update { System.currentTimeMillis() }
         }
     }
 

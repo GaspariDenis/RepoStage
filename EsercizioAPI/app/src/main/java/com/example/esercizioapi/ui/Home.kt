@@ -61,7 +61,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.flow.Flow
 
-private val TAG = "UI"
+private const val tag = "UI"
 
 @SuppressLint("StateFlowValueCalledInComposition", "UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -76,12 +76,12 @@ fun Home(modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel
     viewModel.CheckAlert()
 
     val flowlistaFavourite = viewModel.retriveFavouritePokemon
-    val StatelistaFavourite by viewModel.retriveFavouritePokemon.collectAsStateWithLifecycle(initialValue = UiState.Loading)
+    val statelistaFavourite by viewModel.retriveFavouritePokemon.collectAsStateWithLifecycle(initialValue = UiState.Loading)
 
-    val listaFavourite = when(StatelistaFavourite) {
-        is UiState.Success -> (StatelistaFavourite as UiState.Success<List<UiPokemon>>).json
-        is UiState.Loading -> listOf<UiPokemon>()
-        is UiState.Error -> listOf<UiPokemon>()
+    val listaFavourite = when(statelistaFavourite) {
+        is UiState.Success -> (statelistaFavourite as UiState.Success<List<UiPokemon>>).json
+        is UiState.Loading -> listOf()
+        is UiState.Error -> listOf()
     }
 
     Content(
@@ -93,9 +93,8 @@ fun Home(modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel
         list = list,
         paging = paging,
         userPagingFlow = viewModel.userPagingFlow,
-        listaFavourite = flowlistaFavourite,
         initRicerca = {viewModel.initRicerca()},
-        Favourite = listaFavourite
+        favourite = listaFavourite
     )
 
 }
@@ -111,8 +110,7 @@ fun Content(
     list : List<UiPokemon>?,
     paging : LazyPagingItems<UiPokemon>,
     userPagingFlow : Flow<PagingData<UiPokemon>>,
-    listaFavourite : Flow<UiState<List<UiPokemon>>>,
-    Favourite : List<UiPokemon>,
+    favourite : List<UiPokemon>,
     initRicerca: () -> Unit
 ){
     var isFavourite by remember { mutableStateOf(false) }
@@ -121,12 +119,11 @@ fun Content(
         topBar = {
             Barra(
                 field,
-                searchName(field.text.toString().lowercase()),
+                {searchName(field.text.toString().lowercase())},
                 {
                     searchInfoPokemons(field.text.toString().lowercase())
                 },
-                {
-                },
+                {},
                 initRicerca = initRicerca,
                 modifier = Modifier,
                 nav
@@ -153,7 +150,7 @@ fun Content(
                     Cards(list, onNavigation = { str ->
                         nav.navigate(PokemonRoute(str))
                     },
-                        isFavourite = Favourite,
+                        isFavourite = favourite,
                         )
                 }else{
                     Paging(userPagingFlow, onNavigation = { str ->
@@ -161,10 +158,11 @@ fun Content(
                     }, {
                         paging.refresh()
                     },
-                        isFavourite = Favourite
+                        isFavourite = favourite
                     )
                 }
             }else{
+                /*
                 val listaF by listaFavourite.collectAsState(UiState.Loading)
 
                 var list : List<UiPokemon> = listOf()
@@ -173,12 +171,12 @@ fun Content(
                     is UiState.Success -> list = (listaF as UiState.Success<*>).json as List<UiPokemon>
                     is UiState.Error -> {}
                     is UiState.Loading -> {}
-                }
-                Cards(list,
+                }*/
+                Cards(favourite,
                     onNavigation = {str ->
                     nav.navigate(PokemonRoute(str))
                     },
-                    isFavourite = Favourite
+                    isFavourite = favourite
                 )
             }
         }
@@ -192,8 +190,7 @@ fun Paging(flow :Flow<PagingData<UiPokemon>>,
            onRefresh : () -> Unit,
            isFavourite : List<UiPokemon>,
            ){
-    val userFlow = flow
-    val lazyPagingItems = userFlow.collectAsLazyPagingItems()
+    val lazyPagingItems = flow.collectAsLazyPagingItems()
 
     PullToRefreshBox(
         isRefreshing = !lazyPagingItems.loadState.isIdle,
@@ -223,7 +220,7 @@ fun Paging(flow :Flow<PagingData<UiPokemon>>,
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Barra(field : TextFieldState,
-          result : List<String>,
+          result : () -> List<String>,
           onSearched : () -> Unit,
           onModifier: () -> Unit,
           initRicerca : () -> Unit,
@@ -268,7 +265,7 @@ fun Barra(field : TextFieldState,
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(
-                    items = result,
+                    items = result(),
                     itemContent = {result->
                         ListItem(
                             headlineContent = {Text(result)},
@@ -333,7 +330,7 @@ fun Card(poke : UiPokemon,
             .clickable(
                 enabled = true,
                 onClick = {
-                    Log.d(TAG, "info pokemon -> ${poke.name}")
+                    Log.d(tag, "info pokemon -> ${poke.name}")
                     onNavigation(poke.name)
                 },
             )
@@ -363,7 +360,7 @@ fun Card(poke : UiPokemon,
                 )
             }
 
-            Column() {
+            Column {
                 if(isFavourite){
                     Image(
                         modifier = modifier
